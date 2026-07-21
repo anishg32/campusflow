@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -30,7 +30,19 @@ async function handleResponse<T>(response: Response): Promise<T> {
     if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
       window.location.href = '/login';
     }
-    throw new Error('Unauthorized');
+    
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      data = { message: 'Unauthorized' };
+    }
+    
+    const error: ApiError = {
+      message: data.message || 'Unauthorized',
+      status: 401,
+    };
+    throw error;
   }
 
   let data;

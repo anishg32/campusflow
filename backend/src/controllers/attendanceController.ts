@@ -59,11 +59,11 @@ export const getAttendanceByDate = async (req: AuthRequest, res: Response): Prom
     nextDay.setDate(nextDay.getDate() + 1);
 
     // Get all students in the department
-    const students = await Student.find({ department: departmentId }).sort({ name: 1 });
+    const students = await Student.find({ department: departmentId as string }).sort({ name: 1 });
 
     // Get attendance records for this date
     const attendanceRecords = await Attendance.find({
-      department: departmentId,
+      department: departmentId as string,
       date: { $gte: queryDate, $lt: nextDay },
     });
 

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
-import ThreeBackground from "@/components/ThreeBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +28,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col relative">
-        <ThreeBackground />
-        
+      <body className="min-h-full flex flex-col relative bg-background text-foreground">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

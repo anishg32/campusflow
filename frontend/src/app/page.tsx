@@ -1,168 +1,230 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
-import { Users, ClipboardCheck, Building2, Phone } from 'lucide-react';
-
-gsap.registerPlugin(ScrollTrigger);
+import { Users, ClipboardCheck, Building2, BookOpen, GraduationCap, Calendar, MapPin, PhoneCall, ArrowRight } from 'lucide-react';
 
 export default function Home() {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(heroRef.current, {
-        y: 50,
-        opacity: 0,
-        duration: 1.5,
-        ease: 'power4.out',
-        delay: 0.5
-      });
-
-      if (cardsRef.current) {
-        gsap.from(cardsRef.current.children, {
-          y: 100,
-          opacity: 0,
-          duration: 1,
-          stagger: 0.2,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: cardsRef.current,
-            start: 'top 80%',
-          }
-        });
-      }
-    });
-
-    return () => ctx.revert();
-  }, []);
-
   const features = [
     {
       icon: Users,
-      title: 'Student Records',
-      desc: 'Store and manage complete student details including roll numbers, contact information, and department assignments.',
-      gradient: 'from-indigo-500 to-purple-600',
+      title: 'Student Profiles',
+      desc: 'Maintain comprehensive records of student details, academic history, and contact information.',
     },
     {
       icon: Building2,
-      title: 'Department Organization',
-      desc: 'Organize students by department with easy filtering and management. View department-wise statistics at a glance.',
-      gradient: 'from-pink-500 to-rose-600',
+      title: 'Department Management',
+      desc: 'Organize data across CSE, ECE, EEE, MECH, CIVIL, IT, and AI departments effectively.',
     },
     {
       icon: ClipboardCheck,
-      title: 'Attendance Tracking',
-      desc: 'Mark attendance department-wise with a simple, intuitive interface. View historical records and track attendance trends.',
-      gradient: 'from-emerald-500 to-teal-600',
+      title: 'Daily Attendance',
+      desc: 'Track and monitor student attendance with easy-to-use digital registers for faculty.',
     },
     {
-      icon: Phone,
-      title: 'Contact Management',
-      desc: 'Store student phone numbers for easy access. Keep parent and student contact details organized and accessible.',
-      gradient: 'from-amber-500 to-orange-600',
+      icon: BookOpen,
+      title: 'Academic Performance',
+      desc: 'Record internal assessments, university grades, and generate automated performance reports.',
     },
+    {
+      icon: Calendar,
+      title: 'Timetable Scheduling',
+      desc: 'Manage class schedules, faculty allocations, and lab timings without conflicts.',
+    },
+    {
+      icon: PhoneCall,
+      title: 'Parent Communication',
+      desc: 'Keep parents informed about attendance shortages and academic progress.',
+    }
   ];
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden flex flex-col">
-      {/* Hero Section */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
-        <div ref={heroRef} className="text-center space-y-8 max-w-4xl mx-auto px-4 flex flex-col items-center">
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <img 
-              src="/logo.png" 
-              alt="Arunachala Hitech Logo" 
-              className="w-64 md:w-80 lg:w-96 drop-shadow-2xl mb-4"
-            />
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/70"
-          >
-            Student Management System
-          </motion.h1>
-
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto font-medium"
-          >
-            A streamlined, teacher-led platform to manage student records, 
-            track attendance, and organize departments — all in one place.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
-            <Link href="/login" className="px-8 py-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold text-lg hover:scale-105 transition-transform duration-300 shadow-[0_0_30px_rgba(79,70,229,0.5)] text-center">
-              Teacher Login
-            </Link>
-            <Link href="/register" className="px-8 py-4 rounded-full glass font-semibold text-lg hover:scale-105 hover:bg-white/10 transition-all duration-300 text-center">
-              Create Account
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-10 animate-bounce">
-          <svg className="w-6 h-6 text-foreground/50" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-            <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-          </svg>
-        </div>
+    <main className="min-h-screen bg-slate-950 flex flex-col font-sans text-white selection:bg-primary/30 overflow-hidden">
+      
+      {/* Abstract Background for whole page */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] bg-primary/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[30rem] h-[30rem] bg-purple-600/20 rounded-full blur-[120px]" />
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       </div>
+
+      {/* Main Navigation */}
+      <header className="w-full bg-slate-950/50 border-b border-white/10 backdrop-blur-xl sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-sm">
+              <GraduationCap className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-xl lg:text-2xl text-white leading-tight">Arunachala</span>
+              <span className="text-[10px] lg:text-xs font-bold text-white/50 tracking-widest uppercase">Hitech Engineering College</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-5">
+            <nav className="hidden md:flex gap-6 text-sm font-semibold text-white/60 mr-4">
+              <Link href="#" className="hover:text-white transition-colors">About Us</Link>
+              <Link href="#" className="hover:text-white transition-colors">Academics</Link>
+              <Link href="#" className="hover:text-white transition-colors">Admissions</Link>
+            </nav>
+            <Link href="/login" className="text-sm font-bold text-white/80 hover:text-white transition-colors">
+              Staff Login
+            </Link>
+            <Link href="/register" className="text-sm font-bold px-6 py-2.5 bg-primary/90 text-white rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.4)] hover:bg-primary transition-all">
+              Register
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative z-10 flex-1 flex flex-col justify-center border-b border-white/5 py-12 lg:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+          
+          {/* Text Content */}
+          <div className="flex-1 space-y-6 z-20">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/80 text-xs font-bold tracking-wider mb-6 backdrop-blur-sm">
+                <span className="flex h-2 w-2 rounded-full bg-green-400 animate-pulse"></span>
+                CAMPUS ERP PORTAL V2.0
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 leading-[1.15]">
+                Empowering Education Through <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">Digital Innovation</span>
+              </h1>
+            </motion.div>
+
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-lg text-white/60 leading-relaxed max-w-2xl"
+            >
+              Welcome to the official Management Information System for Arunachala Hitech Engineering College. A secure and centralized platform for faculty to manage attendance, internal marks, and student profiles efficiently.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex flex-col sm:flex-row gap-4 pt-4"
+            >
+              <Link href="/login" className="px-8 py-4 rounded-xl bg-white text-slate-950 font-bold text-center hover:bg-white/90 shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all flex items-center justify-center gap-2 group">
+                Access Staff Portal <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link href="#features" className="px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-center hover:bg-white/10 transition-all backdrop-blur-md">
+                View Modules
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Image Content */}
+          <div className="flex-1 w-full relative z-20">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7 }}
+              className="relative rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(79,70,229,0.3)] border border-white/10 bg-slate-900/50 p-1"
+            >
+              <div className="aspect-[4/3] rounded-xl overflow-hidden relative">
+                 <img 
+                   src="/campus.png" 
+                   alt="Arunachala Hitech Engineering College Campus" 
+                   className="w-full h-full object-cover"
+                 />
+                 
+                 {/* Floating Badge */}
+                 <motion.div 
+                   initial={{ y: 20, opacity: 0 }}
+                   animate={{ y: 0, opacity: 1 }}
+                   transition={{ delay: 0.5 }}
+                   className="absolute bottom-4 right-4 bg-slate-950/90 backdrop-blur-md px-4 py-3 rounded-xl shadow-lg border border-white/10 flex items-center gap-3"
+                 >
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                      <ClipboardCheck className="text-emerald-400 w-4 h-4" /> 
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-white">Live Sync</p>
+                      <p className="text-[10px] text-white/50 uppercase tracking-wider">Attendance System</p>
+                    </div>
+                 </motion.div>
+              </div>
+            </motion.div>
+          </div>
+
+        </div>
+      </section>
 
       {/* Features Section */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-20">
-        <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">Powerful Features</h2>
-        <p className="text-foreground/60 text-lg mb-16 text-center max-w-2xl">Everything you need to manage your college students efficiently</p>
-        
-        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl w-full">
-          {features.map((feature, idx) => (
-            <motion.div 
-              key={idx} 
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6, delay: idx * 0.15 }}
-              className="glass rounded-[2rem] p-8 hover:-translate-y-2 hover:shadow-[0_0_40px_rgba(79,70,229,0.2)] transition-all duration-500 cursor-pointer border border-white/10 group"
-            >
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                <feature.icon size={28} className="text-white" />
-              </div>
-              <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
-              <p className="text-foreground/70 leading-relaxed">{feature.desc}</p>
-            </motion.div>
-          ))}
+      <section id="features" className="relative z-10 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold text-white mb-4">Core Modules</h2>
+            <div className="w-20 h-1 bg-primary mx-auto rounded-full mb-6"></div>
+            <p className="text-white/60 text-lg">
+              Our comprehensive ERP suite simplifies administrative tasks, allowing faculty to focus more on teaching and student development.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, idx) => (
+              <motion.div 
+                key={idx} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: idx * 0.05 }}
+                className="bg-white/5 rounded-2xl p-8 border border-white/10 shadow-lg backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300 group"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/20 flex items-center justify-center mb-6 border border-primary/30 group-hover:scale-110 group-hover:bg-primary/40 transition-all duration-300 text-primary">
+                  <feature.icon className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
+                <p className="text-white/50 leading-relaxed text-sm">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* CTA Section */}
-      <div className="relative z-10 flex flex-col items-center justify-center px-4 py-20">
-        <div className="glass rounded-[2rem] p-12 max-w-3xl w-full text-center border border-white/10">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to get started?</h2>
-          <p className="text-foreground/60 mb-8 text-lg">Sign in with your teacher account to begin managing students.</p>
-          <Link href="/login" className="inline-block px-8 py-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold text-lg hover:scale-105 transition-transform duration-300 shadow-[0_0_30px_rgba(79,70,229,0.4)]">
-            Go to Dashboard →
-          </Link>
+      {/* Footer */}
+      <footer className="relative z-10 bg-slate-950/80 border-t border-white/10 py-12 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 border-b border-white/5 pb-8">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center shadow-lg">
+                  <GraduationCap className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-bold text-xl text-white">Arunachala Hitech</span>
+              </div>
+              <p className="text-sm text-white/50 leading-relaxed">Engineering College<br/>Manavilai, Vellichanthai,<br/>Nagercoil, Kanyakumari District.</p>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4 tracking-wide">Quick Links</h4>
+              <ul className="space-y-3 text-sm text-white/50">
+                <li><Link href="#" className="hover:text-white transition-colors">Anna University</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">AICTE Approvals</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Library Portal</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4 tracking-wide">System Support</h4>
+              <ul className="space-y-3 text-sm text-white/50">
+                <li><Link href="#" className="hover:text-white transition-colors">IT Helpdesk</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">ERP Guidelines</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Report an Issue</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
+            <p>© {new Date().getFullYear()} Arunachala Hitech Engineering College. All rights reserved.</p>
+            <p>Designed by the Department of Computer Science</p>
+          </div>
         </div>
-      </div>
+      </footer>
     </main>
   );
 }
