@@ -11,7 +11,6 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [role, setRole] = useState('student');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +22,7 @@ export default function Register() {
     setSuccess('');
     setLoading(true);
     try {
-      await register(name, email, password, role, phoneNumber);
+      await register(name, email, password, phoneNumber);
       setSuccess('Account created! Redirecting to login...');
     } catch (err: unknown) {
       const apiErr = err as ApiError;
@@ -42,9 +41,14 @@ export default function Register() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="glass w-full max-w-md p-10 rounded-[2rem] z-10 mx-4"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Create Account</h1>
-          <p className="text-foreground/60">Join the future of college management</p>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <img 
+            src="/logo.png" 
+            alt="Logo" 
+            className="w-32 object-contain mb-4 drop-shadow-xl"
+          />
+          <h1 className="text-4xl font-bold mb-2">Teacher Registration</h1>
+          <p className="text-foreground/60">Create your teacher account</p>
         </div>
 
         {error && (
@@ -76,7 +80,7 @@ export default function Register() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-background/50 border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
-              placeholder="John Doe"
+              placeholder="Enter your full name"
             />
           </div>
 
@@ -92,19 +96,16 @@ export default function Register() {
             />
           </div>
 
-          {role === 'student' && (
-            <div>
-              <label className="block text-sm font-medium mb-1">Phone Number (For SMS)</label>
-              <input 
-                type="tel" 
-                required
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-background/50 border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
-                placeholder="+1 234 567 8900"
-              />
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium mb-1">Phone Number</label>
+            <input 
+              type="tel" 
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-background/50 border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+              placeholder="+91 9876543210"
+            />
+          </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">Password</label>
@@ -118,24 +119,10 @@ export default function Register() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">I am a</label>
-            <div className="grid grid-cols-2 gap-4">
-              <label className={`cursor-pointer text-center py-2 rounded-xl border ${role === 'student' ? 'border-indigo-500 bg-indigo-500/10' : 'border-border bg-background/50'} transition-all`}>
-                <input type="radio" className="hidden" name="role" value="student" checked={role === 'student'} onChange={() => setRole('student')} />
-                Student
-              </label>
-              <label className={`cursor-pointer text-center py-2 rounded-xl border ${role === 'faculty' ? 'border-pink-500 bg-pink-500/10' : 'border-border bg-background/50'} transition-all`}>
-                <input type="radio" className="hidden" name="role" value="faculty" checked={role === 'faculty'} onChange={() => setRole('faculty')} />
-                Faculty
-              </label>
-            </div>
-          </div>
-
           <button 
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-xl bg-foreground text-background font-bold text-lg hover:bg-foreground/90 transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold text-lg hover:opacity-90 transition-all hover:shadow-[0_0_20px_rgba(79,70,229,0.4)] mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
             {loading ? (
               <>
@@ -146,7 +133,7 @@ export default function Register() {
                 Creating Account...
               </>
             ) : (
-              'Register'
+              'Create Account'
             )}
           </button>
         </form>

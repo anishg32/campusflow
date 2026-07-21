@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import seedDepartments from './seed';
 
 const connectDB = async () => {
   try {
@@ -14,6 +15,9 @@ const connectDB = async () => {
 
     const conn = await mongoose.connect(uri);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    
+    // Seed default departments
+    await seedDepartments();
   } catch (error: any) {
     console.error(`Error: ${error.message}`);
     process.exit(1);

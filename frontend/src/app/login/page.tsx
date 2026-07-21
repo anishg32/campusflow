@@ -42,8 +42,8 @@ export default function Login() {
             alt="Logo" 
             className="w-32 object-contain mb-4 drop-shadow-xl"
           />
-          <h1 className="text-4xl font-bold mb-2">Welcome Back</h1>
-          <p className="text-foreground/60">Sign in to your Arunachala Hitech account</p>
+          <h1 className="text-4xl font-bold mb-2">Teacher Login</h1>
+          <p className="text-foreground/60">Sign in to manage students and attendance</p>
         </div>
 
         {error && (
@@ -86,15 +86,12 @@ export default function Login() {
               <input type="checkbox" className="rounded border-border text-indigo-500 focus:ring-indigo-500 bg-background/50" />
               <span>Remember me</span>
             </label>
-            <Link href="#" className="text-indigo-500 hover:text-indigo-400 transition-colors">
-              Forgot Password?
-            </Link>
           </div>
 
           <button 
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-xl bg-foreground text-background font-bold text-lg hover:bg-foreground/90 transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold text-lg hover:opacity-90 transition-all hover:shadow-[0_0_20px_rgba(79,70,229,0.4)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
             {loading ? (
               <>
@@ -111,7 +108,7 @@ export default function Login() {
         </form>
 
         <p className="text-center mt-8 text-sm text-foreground/60">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" className="text-indigo-500 hover:text-indigo-400 font-semibold transition-colors">
             Register here
           </Link>

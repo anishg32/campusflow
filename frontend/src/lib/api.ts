@@ -23,7 +23,23 @@ export interface ApiError {
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
-  const data = await response.json();
+  if (response.status === 401 && typeof window !== 'undefined') {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    // Only redirect if not already on login/register to avoid reload loops
+    if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+      window.location.href = '/login';
+    }
+    throw new Error('Unauthorized');
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    data = { message: 'An error occurred' };
+  }
+  
   if (!response.ok) {
     const error: ApiError = {
       message: data.message || 'Something went wrong',
@@ -47,6 +63,23 @@ export async function apiPost<T>(path: string, body?: Record<string, unknown>): 
     method: 'POST',
     headers: buildHeaders(),
     body: body ? JSON.stringify(body) : undefined,
+  });
+  return handleResponse<T>(response);
+}
+
+export async function apiPut<T>(path: string, body?: Record<string, unknown>): Promise<T> {
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method: 'PUT',
+    headers: buildHeaders(),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  return handleResponse<T>(response);
+}
+
+export async function apiDelete<T>(path: string): Promise<T> {
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method: 'DELETE',
+    headers: buildHeaders(),
   });
   return handleResponse<T>(response);
 }

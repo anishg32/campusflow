@@ -8,7 +8,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'student' | 'faculty' | 'admin' | 'principal' | 'hod';
+  role: 'faculty' | 'admin';
   avatar?: string;
   department?: string;
   token: string;
@@ -19,7 +19,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role: string, phoneNumber?: string) => Promise<void>;
+  register: (name: string, email: string, password: string, phoneNumber?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -55,17 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('user', JSON.stringify(data));
     setToken(data.token);
     setUser(data);
-
-    // Redirect based on role
-    if (data.role === 'faculty' || data.role === 'admin' || data.role === 'principal' || data.role === 'hod') {
-      router.push('/dashboard/faculty');
-    } else {
-      router.push('/dashboard/student');
-    }
+    router.push('/dashboard');
   }, [router]);
 
-  const register = useCallback(async (name: string, email: string, password: string, role: string) => {
-    await apiPost<User>('/auth/register', { name, email, password, role });
+  const register = useCallback(async (name: string, email: string, password: string, phoneNumber?: string) => {
+    await apiPost<User>('/auth/register', { name, email, password, phoneNumber });
     // Don't auto-login — redirect to login page
     router.push('/login');
   }, [router]);

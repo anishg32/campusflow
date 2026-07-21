@@ -7,6 +7,8 @@ const app: Application = express();
 import authRoutes from './routes/authRoutes';
 import attendanceRoutes from './routes/attendanceRoutes';
 import userRoutes from './routes/userRoutes';
+import studentRoutes from './routes/studentRoutes';
+import departmentRoutes from './routes/departmentRoutes';
 
 // Middleware
 app.use(express.json());
@@ -17,10 +19,12 @@ app.use(morgan('dev'));
 app.use('/api/auth', authRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/departments', departmentRoutes);
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {
-  res.send('CampusFlow AI API is running...');
+  res.send('Student Management System API is running...');
 });
 
 // Error handling middleware

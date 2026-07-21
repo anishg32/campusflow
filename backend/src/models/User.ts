@@ -2,11 +2,8 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export enum Role {
-  STUDENT = 'student',
   FACULTY = 'faculty',
   ADMIN = 'admin',
-  PRINCIPAL = 'principal',
-  HOD = 'hod',
 }
 
 export interface IUser extends Document {
@@ -42,7 +39,7 @@ const userSchema = new Schema<IUser>(
     role: {
       type: String,
       enum: Object.values(Role),
-      default: Role.STUDENT,
+      default: Role.FACULTY,
     },
     avatar: {
       type: String,

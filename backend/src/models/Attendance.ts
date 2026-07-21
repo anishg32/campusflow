@@ -3,29 +3,21 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 export enum AttendanceStatus {
   PRESENT = 'present',
   ABSENT = 'absent',
-  LATE = 'late',
-  EXCUSED = 'excused',
 }
 
 export interface IAttendance extends Document {
   student: mongoose.Types.ObjectId;
-  subject: mongoose.Types.ObjectId;
   faculty: mongoose.Types.ObjectId;
   date: Date;
   status: AttendanceStatus;
-  method: 'manual' | 'qr' | 'face';
+  department: mongoose.Types.ObjectId;
 }
 
 const attendanceSchema = new Schema<IAttendance>(
   {
     student: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    subject: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Subject',
+      ref: 'Student',
       required: true,
     },
     faculty: {
@@ -43,9 +35,9 @@ const attendanceSchema = new Schema<IAttendance>(
       enum: Object.values(AttendanceStatus),
       required: true,
     },
-    method: {
-      type: String,
-      enum: ['manual', 'qr', 'face'],
+    department: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Department',
       required: true,
     },
   },
@@ -53,6 +45,9 @@ const attendanceSchema = new Schema<IAttendance>(
     timestamps: true,
   }
 );
+
+// Compound index: one attendance record per student per day
+attendanceSchema.index({ student: 1, date: 1 }, { unique: true });
 
 const Attendance: Model<IAttendance> = mongoose.model<IAttendance>('Attendance', attendanceSchema);
 export default Attendance;

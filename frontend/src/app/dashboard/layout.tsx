@@ -3,26 +3,16 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Calendar, FileText, Settings, LogOut, ScanFace, QrCode, Users, AlertCircle, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, ClipboardCheck, Settings, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 
-const studentNavItems = [
-  { name: 'Overview', href: '/dashboard/student', icon: LayoutDashboard },
-  { name: 'Face Attendance', href: '/dashboard/student/face', icon: ScanFace },
-  { name: 'QR Attendance', href: '/dashboard/student/qr', icon: QrCode },
-  { name: 'Schedule', href: '/dashboard/student/schedule', icon: Calendar },
-  { name: 'Leave Requests', href: '/dashboard/student/leaves', icon: FileText },
-  { name: 'Settings', href: '/dashboard/student/settings', icon: Settings },
-];
-
-const facultyNavItems = [
-  { name: 'Overview', href: '/dashboard/faculty', icon: LayoutDashboard },
-  { name: 'Manual Attendance', href: '/dashboard/faculty/manual', icon: CheckCircle },
-  { name: 'Generate QR', href: '/dashboard/faculty/qr', icon: QrCode },
-  { name: 'Face Scanner', href: '/dashboard/faculty/face', icon: ScanFace },
-  { name: 'My Students', href: '/dashboard/faculty/students', icon: Users },
-  { name: 'Settings', href: '/dashboard/faculty/settings', icon: Settings },
+const navItems = [
+  { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Students', href: '/dashboard/students', icon: Users },
+  { name: 'Departments', href: '/dashboard/departments', icon: Building2 },
+  { name: 'Attendance', href: '/dashboard/attendance', icon: ClipboardCheck },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -54,12 +44,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  const isFaculty = user.role === 'faculty' || user.role === 'admin' || user.role === 'principal' || user.role === 'hod';
-  const navItems = isFaculty ? facultyNavItems : studentNavItems;
-
-  // Compute display info
-  const displayRole = user.role.charAt(0).toUpperCase() + user.role.slice(1);
-
   return (
     <div className="min-h-screen bg-background flex overflow-hidden">
       {/* Sidebar */}
@@ -74,7 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             alt="Logo" 
             className="w-12 h-12 object-contain drop-shadow-md"
           />
-          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 leading-tight">Arunachala Hitech Attendance</span>
+          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 leading-tight">Student Manager</span>
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-4">
@@ -84,8 +68,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             
             return (
               <Link key={item.name} href={item.href}>
-                <div className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-foreground text-background shadow-lg' : 'hover:bg-foreground/5 text-foreground/70'}`}>
-                  <Icon size={20} className={isActive ? 'text-background' : 'text-foreground/70'} />
+                <div className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20' : 'hover:bg-foreground/5 text-foreground/70'}`}>
+                  <Icon size={20} className={isActive ? 'text-white' : 'text-foreground/70'} />
                   <span className="font-medium">{item.name}</span>
                 </div>
               </Link>
@@ -114,9 +98,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-bold">{user.name}</p>
-              <p className="text-xs text-foreground/60">{displayRole}</p>
+              <p className="text-xs text-foreground/60">Teacher</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 border-2 border-background cursor-pointer flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 border-2 border-background cursor-pointer flex items-center justify-center text-white font-bold text-sm">
               {user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
             </div>
           </div>

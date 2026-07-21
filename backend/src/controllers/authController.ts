@@ -4,7 +4,7 @@ import generateToken from '../utils/generateToken';
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, role, phoneNumber } = req.body;
+    const { name, email, password, phoneNumber } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -17,7 +17,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       email,
       password,
       phoneNumber,
-      role: role || Role.STUDENT,
+      role: Role.FACULTY,
     });
 
     if (user) {

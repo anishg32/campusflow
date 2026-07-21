@@ -1,205 +1,149 @@
-import { Request, Response } from 'express';
-import crypto from 'crypto';
-import QRSession from '../models/QRSession';
+import { Response } from 'express';
 import Attendance, { AttendanceStatus } from '../models/Attendance';
+import Student from '../models/Student';
 import { AuthRequest } from '../middlewares/authMiddleware';
-import Subject from '../models/Subject';
 
-// Generate QR Code Session for a class
-export const generateQRSession = async (req: AuthRequest, res: Response): Promise<void> => {
+// Mark attendance for multiple students at once
+export const markAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { subjectId, latitude, longitude, radius } = req.body;
+    const { date, departmentId, records } = req.body;
+    // records: [{ studentId: string, status: 'present' | 'absent' }]
     const facultyId = req.user?.id;
 
-    const subject = await Subject.findById(subjectId);
-    if (!subject) {
-      res.status(404).json({ message: 'Subject not found' });
+    if (!records || !Array.isArray(records) || records.length === 0) {
+      res.status(400).json({ message: 'No attendance records provided' });
       return;
     }
 
-    if (subject.faculty.toString() !== facultyId) {
-      res.status(403).json({ message: 'Not authorized for this subject' });
-      return;
+    const attendanceDate = new Date(date);
+    attendanceDate.setHours(0, 0, 0, 0);
+
+    const results = [];
+    for (const record of records) {
+      const { studentId, status } = record;
+
+      // Upsert: update if exists, create if not
+      const attendance = await Attendance.findOneAndUpdate(
+        { student: studentId, date: attendanceDate },
+        {
+          student: studentId,
+          faculty: facultyId,
+          date: attendanceDate,
+          status: status === 'present' ? AttendanceStatus.PRESENT : AttendanceStatus.ABSENT,
+          department: departmentId,
+        },
+        { upsert: true, new: true }
+      );
+      results.push(attendance);
     }
 
-    // Deactivate previous active sessions for this subject
-    await QRSession.updateMany({ subject: subjectId, isActive: true }, { isActive: false });
-
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 30 * 1000); // 30 seconds expiry
-
-    const qrSession = await QRSession.create({
-      subject: subjectId,
-      faculty: facultyId,
-      token,
-      expiresAt,
-      latitude,
-      longitude,
-      radius,
-    });
-
-    res.status(201).json({ qrToken: qrSession.token, expiresAt: qrSession.expiresAt });
+    res.status(201).json({ message: `Attendance marked for ${results.length} students`, count: results.length });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Scan QR Code to mark attendance
-export const scanQRCode = async (req: AuthRequest, res: Response): Promise<void> => {
+// Get attendance records for a department on a specific date
+export const getAttendanceByDate = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { token, latitude, longitude } = req.body;
-    const studentId = req.user?.id;
+    const { date, departmentId } = req.query;
 
-    const session = await QRSession.findOne({ token, isActive: true });
-
-    if (!session) {
-      res.status(400).json({ message: 'Invalid or expired QR code' });
+    if (!date || !departmentId) {
+      res.status(400).json({ message: 'Date and departmentId are required' });
       return;
     }
 
-    if (new Date() > session.expiresAt) {
-      session.isActive = false;
-      await session.save();
-      res.status(400).json({ message: 'QR code expired' });
-      return;
-    }
+    const queryDate = new Date(date as string);
+    queryDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(queryDate);
+    nextDay.setDate(nextDay.getDate() + 1);
 
-    // Geolocation verification
-    if (session.latitude && session.longitude && latitude && longitude) {
-      const distance = getDistanceFromLatLonInM(session.latitude, session.longitude, latitude, longitude);
-      if (distance > (session.radius || 50)) {
-        res.status(400).json({ message: 'You are not within the classroom radius' });
-        return;
-      }
-    }
+    // Get all students in the department
+    const students = await Student.find({ department: departmentId }).sort({ name: 1 });
 
-    // Check if attendance already marked
-    const existing = await Attendance.findOne({
-      student: studentId,
-      subject: session.subject,
-      date: { $gte: new Date().setHours(0, 0, 0, 0) },
+    // Get attendance records for this date
+    const attendanceRecords = await Attendance.find({
+      department: departmentId,
+      date: { $gte: queryDate, $lt: nextDay },
     });
 
-    if (existing) {
-      res.status(400).json({ message: 'Attendance already marked for today' });
-      return;
-    }
-
-    await Attendance.create({
-      student: studentId,
-      subject: session.subject,
-      faculty: session.faculty,
-      status: AttendanceStatus.PRESENT,
-      method: 'qr',
+    // Map attendance to students
+    const attendanceMap = new Map<string, string>();
+    attendanceRecords.forEach((record) => {
+      attendanceMap.set(record.student.toString(), record.status);
     });
 
-    res.status(201).json({ message: 'Attendance marked successfully' });
+    const result = students.map((student) => ({
+      _id: student._id,
+      name: student.name,
+      rollNumber: student.rollNumber,
+      phoneNumber: student.phoneNumber,
+      status: attendanceMap.get(student._id.toString()) || null,
+    }));
+
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Mark attendance via Face Recognition
-export const markFaceAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
+// Get attendance history for a specific student
+export const getStudentAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { subjectId, studentId, confidence } = req.body;
-    // Note: AI matching logic happens on the client side (face-api.js), 
-    // we receive the verified studentId here or verify embeddings backend.
-    // For this architecture, we trust the client to send the matched student ID along with a secure payload.
-    // In production, we'd compare embeddings here on the server.
-    
-    if (confidence < 0.6) {
-       res.status(400).json({ message: 'Face recognition confidence too low' });
-       return;
+    const { id } = req.params;
+    const { month, year } = req.query;
+
+    const filter: any = { student: id };
+
+    if (month && year) {
+      const startDate = new Date(Number(year), Number(month) - 1, 1);
+      const endDate = new Date(Number(year), Number(month), 0, 23, 59, 59);
+      filter.date = { $gte: startDate, $lte: endDate };
     }
 
-    const subject = await Subject.findById(subjectId);
-    if (!subject) {
-      res.status(404).json({ message: 'Subject not found' });
-      return;
-    }
+    const records = await Attendance.find(filter)
+      .populate('faculty', 'name')
+      .sort({ date: -1 });
 
-    const existing = await Attendance.findOne({
-      student: studentId,
-      subject: subjectId,
-      date: { $gte: new Date().setHours(0, 0, 0, 0) },
+    // Calculate stats
+    const total = records.length;
+    const present = records.filter((r) => r.status === AttendanceStatus.PRESENT).length;
+    const absent = total - present;
+
+    res.json({
+      records,
+      stats: { total, present, absent, percentage: total > 0 ? Math.round((present / total) * 100) : 0 },
     });
-
-    if (existing) {
-      res.status(400).json({ message: 'Attendance already marked for today' });
-      return;
-    }
-
-    await Attendance.create({
-      student: studentId,
-      subject: subjectId,
-      faculty: subject.faculty,
-      status: AttendanceStatus.PRESENT,
-      method: 'face',
-    });
-
-    res.status(201).json({ message: 'Face Attendance marked successfully' });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Manual Attendance Entry by Faculty with SMS trigger
-export const markManualAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
+// Get overall stats for the dashboard
+export const getAttendanceStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { studentEmail, status } = req.body; // status: 'present' | 'absent'
-    const facultyId = req.user?.id;
+    const totalStudents = await Student.countDocuments();
 
-    // Find student by email
-    const User = require('../models/User').default;
-    const student = await User.findOne({ email: studentEmail, role: 'student' });
-    
-    if (!student) {
-      res.status(404).json({ message: 'Student not found with that email' });
-      return;
-    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // In a real app, we'd specify the subject. For simplicity, we just log a generic manual attendance record.
-    await Attendance.create({
-      student: student._id,
-      faculty: facultyId,
-      status: status === 'present' ? AttendanceStatus.PRESENT : AttendanceStatus.ABSENT,
-      method: 'manual',
+    const todayRecords = await Attendance.find({
+      date: { $gte: today, $lt: tomorrow },
     });
 
-    // SIMULATED SMS
-    if (student.phoneNumber) {
-      console.log(`\n\n[SMS DISPATCH]`);
-      console.log(`To: ${student.phoneNumber}`);
-      console.log(`Message: Your attendance has been manually marked as ${status.toUpperCase()} by your faculty.`);
-      console.log(`Status: Delivered\n\n`);
-    } else {
-      console.log(`\n\n[SMS WARNING] Could not send SMS to ${student.name} - No phone number on file.\n\n`);
-    }
+    const todayPresent = todayRecords.filter((r) => r.status === AttendanceStatus.PRESENT).length;
+    const todayTotal = todayRecords.length;
 
-    res.status(201).json({ 
-      message: `Attendance marked ${status} for ${student.name}`,
-      smsSent: !!student.phoneNumber
+    res.json({
+      totalStudents,
+      todayPresent,
+      todayAbsent: todayTotal - todayPresent,
+      todayTotal,
+      todayPercentage: todayTotal > 0 ? Math.round((todayPresent / todayTotal) * 100) : 0,
     });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 };
-
-// Helper function for Haversine formula
-function getDistanceFromLatLonInM(lat1: number, lon1: number, lat2: number, lon2: number) {
-  var R = 6371e3; // Radius of the earth in m
-  var dLat = deg2rad(lat2 - lat1);
-  var dLon = deg2rad(lon2 - lon1);
-  var a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  var d = R * c; // Distance in m
-  return d;
-}
-
-function deg2rad(deg: number) {
-  return deg * (Math.PI / 180);
-}
