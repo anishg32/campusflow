@@ -70,8 +70,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <GraduationCap className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <span className="text-lg font-bold text-white block leading-tight">Arunachala</span>
-                  <span className="text-[10px] uppercase tracking-widest text-white/50 font-semibold">Hitech Engineering</span>
+                  <span className="text-lg font-bold text-white block leading-tight">College</span>
+                  <span className="text-[10px] uppercase tracking-widest text-white/50 font-semibold">Automation</span>
                 </div>
               </div>
               <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 hover:bg-white/10 rounded-lg text-white/70">

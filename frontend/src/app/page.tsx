@@ -56,8 +56,8 @@ export default function Home() {
               <GraduationCap className="w-7 h-7 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-xl lg:text-2xl text-white leading-tight">Arunachala</span>
-              <span className="text-[10px] lg:text-xs font-bold text-white/50 tracking-widest uppercase">Hitech Engineering College</span>
+              <span className="font-bold text-xl lg:text-2xl text-white leading-tight">College Automation</span>
+              <span className="text-[10px] lg:text-xs font-bold text-white/50 tracking-widest uppercase">System</span>
             </div>
           </div>
           <div className="flex items-center gap-5">
@@ -102,7 +102,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-lg text-white/60 leading-relaxed max-w-2xl"
             >
-              Welcome to the official Management Information System for Arunachala Hitech Engineering College. A secure and centralized platform for faculty to manage attendance, internal marks, and student profiles efficiently.
+              Welcome to the official Management Information System for College Automation. A secure and centralized platform for faculty to manage attendance, internal marks, and student profiles efficiently.
             </motion.p>
 
             <motion.div
@@ -131,7 +131,7 @@ export default function Home() {
               <div className="aspect-[4/3] rounded-xl overflow-hidden relative">
                  <img 
                    src="/campus.png" 
-                   alt="Arunachala Hitech Engineering College Campus" 
+                   alt="College Automation Campus"
                    className="w-full h-full object-cover"
                  />
                  
@@ -198,9 +198,9 @@ export default function Home() {
                 <div className="w-10 h-10 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center shadow-lg">
                   <GraduationCap className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-xl text-white">Arunachala Hitech</span>
+                <span className="font-bold text-xl text-white">College Automation</span>
               </div>
-              <p className="text-sm text-white/50 leading-relaxed">Engineering College<br/>Manavilai, Vellichanthai,<br/>Nagercoil, Kanyakumari District.</p>
+              <p className="text-sm text-white/50 leading-relaxed">System<br/>Central Campus<br/>Main City.</p>
             </div>
             <div>
               <h4 className="text-white font-bold mb-4 tracking-wide">Quick Links</h4>
@@ -220,7 +220,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
-            <p>© {new Date().getFullYear()} Arunachala Hitech Engineering College. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} College Automation. All rights reserved.</p>
             <p>Designed by the Department of Computer Science</p>
           </div>
         </div>

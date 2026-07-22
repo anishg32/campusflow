@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Arunachala Hitech Engineering College Attendance List",
-  description: "Teacher-led attendance management system for Arunachala Hitech Engineering College",
+  title: "College Automation",
+  description: "Teacher-led attendance management system for College Automation",
 };
 
 export default function RootLayout({

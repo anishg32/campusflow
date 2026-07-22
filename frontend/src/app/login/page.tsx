@@ -51,8 +51,8 @@ export default function Login() {
             <GraduationCap className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-tight">Arunachala Hitech</h1>
-            <p className="text-xs text-white/70">Engineering College</p>
+            <h1 className="font-bold text-lg leading-tight">College Automation</h1>
+            <p className="text-xs text-white/70">System</p>
           </div>
         </div>
 
@@ -76,7 +76,7 @@ export default function Login() {
         </div>
 
         <div className="relative z-10 text-xs text-white/50">
-          © {new Date().getFullYear()} Arunachala Hitech Engineering College. All rights reserved.
+          © {new Date().getFullYear()} College Automation. All rights reserved.
         </div>
       </div>
 
@@ -94,7 +94,7 @@ export default function Login() {
                 <GraduationCap className="w-6 h-6 text-primary-foreground" />
              </div>
              <div className="text-center">
-                <h1 className="font-bold text-xl leading-tight">Arunachala Hitech</h1>
+                <h1 className="font-bold text-xl leading-tight">College Automation</h1>
              </div>
           </div>
 
@@ -149,7 +149,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="premium-input !pl-11"
-                  placeholder={role === 'Admin' ? 'admin@arunachala.edu.in' : role === 'Faculty' ? 'faculty@arunachala.edu.in' : 'student@arunachala.edu.in'}
+                  placeholder={role === 'Admin' ? 'admin@college.edu' : role === 'Faculty' ? 'faculty@college.edu' : 'student@college.edu'}
                 />
               </div>
             </div>
@@ -202,9 +202,9 @@ export default function Login() {
           <div className="text-center text-xs text-muted-foreground space-y-1 pt-6 pb-2 border-t border-border">
             <p className="font-medium">Demo Credentials</p>
             <p>
-              {role === 'Admin' && "admin@arunachala.edu.in / admin123"}
-              {role === 'Faculty' && "faculty@arunachala.edu.in / faculty123"}
-              {role === 'Student' && "student@arunachala.edu.in / student123"}
+              {role === 'Admin' && "admin@college.edu / admin123"}
+              {role === 'Faculty' && "faculty@college.edu / faculty123"}
+              {role === 'Student' && "student@college.edu / student123"}
             </p>
           </div>
           
