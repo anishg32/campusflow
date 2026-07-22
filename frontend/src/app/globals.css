@@ -21,6 +21,8 @@
   --border: #e2e8f0;
   --ring: #4f46e5;
   --radius: 0.5rem;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -33,6 +35,8 @@
     --card-foreground: #f8fafc;
     --border: #334155;
     --ring: #6366f1;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
   }
 }
 
@@ -63,3 +67,10 @@ body {
   background: rgba(100, 116, 139, 0.5); /* slate-500 with opacity */
 }
 
+
+/* Premium Input Styles */
+.premium-input {
+  @apply w-full h-12 px-4 rounded-xl bg-background border border-border outline-none transition-all duration-200;
+  @apply focus:border-primary focus:ring-2 focus:ring-primary/20;
+  @apply placeholder:text-[var(--muted-foreground)] opacity-70 shadow-sm text-sm;
+}

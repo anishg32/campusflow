@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Building2, ClipboardCheck, Settings, LogOut, GraduationCap, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, ClipboardCheck, Settings, LogOut, GraduationCap, Menu, X, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 
@@ -12,6 +12,7 @@ const navItems = [
   { name: 'Students', href: '/dashboard/students', icon: Users },
   { name: 'Departments', href: '/dashboard/departments', icon: Building2 },
   { name: 'Attendance', href: '/dashboard/attendance', icon: ClipboardCheck },
+  { name: 'Fees', href: '/dashboard/fees', icon: CreditCard },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
