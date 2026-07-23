@@ -5,25 +5,21 @@ import { generateToken } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    await connectDB();
-    const { email, password } = await req.json();
+    const { email } = await req.json();
 
-    const user = await User.findOne({ email });
+    // MOCK LOGIN BYPASS
+    // Always succeed regardless of password or database
+    let role = 'student';
+    if (email.includes('admin')) role = 'admin';
+    if (email.includes('faculty')) role = 'faculty';
 
-    if (user && (await user.matchPassword(password))) {
-      return NextResponse.json({
-        _id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user.id, user.role),
-      });
-    } else {
-      return NextResponse.json(
-        { message: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
+    return NextResponse.json({
+      _id: 'mock-user-id-123',
+      name: 'Demo ' + role,
+      email: email,
+      role: role,
+      token: generateToken('mock-user-id-123', role),
+    });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
