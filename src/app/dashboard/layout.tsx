@@ -67,12 +67,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             <div className="p-8 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-lg">
-                  <GraduationCap className="w-6 h-6 text-primary" />
+                <div className="w-10 h-10 rounded-xl bg-white/10 overflow-hidden flex items-center justify-center border border-primary/20 shadow-lg p-1">
+                  <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
                 <div>
-                  <span className="text-lg font-bold text-foreground block leading-tight">College</span>
-                  <span className="text-[10px] uppercase tracking-widest text-foreground/50 font-semibold">Automation</span>
+                  <span className="text-sm font-bold text-foreground block leading-tight">Arunachala Hitech</span>
+                  <span className="text-[10px] uppercase tracking-widest text-foreground/50 font-semibold">Engineering College</span>
                 </div>
               </div>
               <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 hover:bg-muted rounded-lg text-foreground/70">
