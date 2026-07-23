@@ -20,8 +20,23 @@ export async function verifyAuth(req: NextRequest): Promise<any> {
       token = authHeader.split(' ')[1];
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string };
 
+      // MOCK BYPASS
+      if (decoded.id === 'mock-user-id-123') {
+        return {
+          _id: 'mock-user-id-123',
+          name: 'Demo ' + decoded.role,
+          email: 'demo@college.edu',
+          role: decoded.role
+        };
+      }
+
       await connectDB();
-      const user = await User.findById(decoded.id).select('-password');
+      let user = null;
+      try {
+        user = await User.findById(decoded.id).select('-password');
+      } catch (err) {
+        // Ignore cast errors for invalid ID formats
+      }
       
       if (!user) {
         throw new Error('Not authorized, user not found');
