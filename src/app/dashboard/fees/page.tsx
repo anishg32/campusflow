@@ -147,13 +147,13 @@ export default function FeesPage() {
           <div class="details">
             <div>
               <h3>Student Details</h3>
-              <p>Name: ${fee.student.name}</p>
-              <p>Roll No: ${fee.student.rollNumber}</p>
-              <p>Department: ${fee.department.name}</p>
+              <p>Name: ${fee.student?.name || 'N/A'}</p>
+              <p>Roll No: ${fee.student?.rollNumber || 'N/A'}</p>
+              <p>Department: ${fee.department?.name || 'N/A'}</p>
             </div>
             <div>
               <h3>Fee Details</h3>
-              <p>Title: ${fee.title}</p>
+              <p>Title: ${fee.title || 'N/A'}</p>
               <p>Due Date: ${new Date(fee.dueDate).toLocaleDateString()}</p>
               <p>Status: ${fee.status}</p>
             </div>
@@ -186,16 +186,18 @@ export default function FeesPage() {
   };
 
   const filteredFees = fees.filter(f => {
-    const searchLower = search.toLowerCase();
-    const matchesSearch = 
-      f.student?.name.toLowerCase().includes(searchLower) || 
-      f.student?.rollNumber.toLowerCase().includes(searchLower) ||
-      f.title.toLowerCase().includes(searchLower);
-    
-    if (!matchesSearch) return false;
+    if (search) {
+      const searchLower = search.toLowerCase();
+      const matchesSearch = 
+        (f.student?.name?.toLowerCase() || '').includes(searchLower) || 
+        (f.student?.rollNumber?.toLowerCase() || '').includes(searchLower) ||
+        (f.title?.toLowerCase() || '').includes(searchLower);
+      
+      if (!matchesSearch) return false;
+    }
     
     if (filterYear && f.student?.year?.toString() !== filterYear) return false;
-    if (filterDept && f.department?._id !== filterDept) return false;
+    if (filterDept && (f.department?._id || f.department) !== filterDept) return false;
 
     if (filterTab === 'All') return true;
     if (filterTab === 'Pending') return f.status !== 'Paid';
@@ -335,7 +337,7 @@ export default function FeesPage() {
                 <tr key={fee._id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
                     <div className="font-medium text-foreground">{fee.title}</div>
-                    <div className="text-xs text-foreground/40">{fee.department.code}</div>
+                    <div className="text-xs text-foreground/40">{fee.department?.code || '-'}</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-medium text-foreground">{fee.student?.name || 'Unknown'}</div>
