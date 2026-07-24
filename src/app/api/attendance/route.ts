@@ -50,6 +50,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const date = searchParams.get('date');
     const departmentId = searchParams.get('departmentId');
+    const year = searchParams.get('year');
 
     if (!date || !departmentId) {
       return NextResponse.json({ message: 'Date and departmentId are required' }, { status: 400 });
@@ -60,7 +61,10 @@ export async function GET(req: NextRequest) {
     const nextDay = new Date(queryDate);
     nextDay.setDate(nextDay.getDate() + 1);
 
-    const students = await Student.find({ department: departmentId }).sort({ name: 1 });
+    const studentFilter: any = { department: departmentId };
+    if (year) studentFilter.year = Number(year);
+
+    const students = await Student.find(studentFilter).sort({ name: 1 });
 
     const attendanceRecords = await Attendance.find({
       department: departmentId,

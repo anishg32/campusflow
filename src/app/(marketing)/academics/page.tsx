@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { BookOpen, Cpu, Zap, Database, Globe, Wrench, ArrowLeft } from 'lucide-react';
+import { BookOpen, Cpu, Zap, Database, Globe, Wrench, ArrowLeft, Building2 } from 'lucide-react';
 
 export default function AcademicsPage() {
   const departments = [
@@ -48,6 +48,13 @@ export default function AcademicsPage() {
       icon: Wrench,
       color: 'text-orange-400',
       bg: 'bg-orange-400/20'
+    },
+    {
+      title: 'Civil Engineering',
+      degree: 'B.E',
+      icon: Building2,
+      color: 'text-stone-400',
+      bg: 'bg-stone-400/20'
     }
   ];
 
@@ -60,25 +67,6 @@ export default function AcademicsPage() {
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(to right, rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       </div>
 
-      {/* Header */}
-      <header className="w-full bg-background/50 border-b border-white/10 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-sm overflow-hidden p-1">
-              <Image src="/logo.png" alt="Logo" width={40} height={40} className="object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-xl lg:text-2xl text-foreground leading-tight">Arunachala Hitech</span>
-              <span className="text-[10px] lg:text-xs font-bold text-foreground/50 tracking-widest uppercase">Engineering College</span>
-            </div>
-          </Link>
-          <div className="flex items-center gap-5">
-            <Link href="/" className="text-sm font-semibold flex items-center gap-2 text-foreground/60 hover:text-foreground transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full flex-1 flex flex-col items-center">

@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     if (department) filter.department = department;
 
     const fees = await Fee.find(filter)
-      .populate('student', 'name rollNumber')
+      .populate('student', 'name rollNumber year')
       .populate('department', 'name code')
       .sort({ createdAt: -1 });
 

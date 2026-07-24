@@ -34,6 +34,7 @@ export default function StudentsPage() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [filterYear, setFilterYear] = useState('');
 
   // Form fields
   const [name, setName] = useState('');
@@ -50,6 +51,7 @@ export default function StudentsPage() {
     try {
       let path = '/students?';
       if (filterDept) path += `department=${filterDept}&`;
+      if (filterYear) path += `year=${filterYear}&`;
       if (search) path += `search=${search}&`;
       const data = await apiGet<Student[]>(path);
       setStudents(data);
@@ -79,7 +81,7 @@ export default function StudentsPage() {
       fetchStudents();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, filterDept]);
+  }, [search, filterDept, filterYear]);
 
   const resetForm = () => {
     setName('');
@@ -186,6 +188,17 @@ export default function StudentsPage() {
           {departments.map((dept) => (
             <option key={dept._id} value={dept._id}>{dept.name}</option>
           ))}
+        </select>
+        <select
+          value={filterYear}
+          onChange={(e) => setFilterYear(e.target.value)}
+          className="px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-primary outline-none transition-all min-w-[150px]"
+        >
+          <option value="">All Years</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+          <option value="3">3rd Year</option>
+          <option value="4">4th Year</option>
         </select>
       </div>
 

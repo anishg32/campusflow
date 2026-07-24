@@ -49,7 +49,7 @@ export default function Login() {
 
         <div className="relative z-10 flex items-center gap-3">
           <div className="p-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden">
-            <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" />
+            <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" style={{ width: 'auto', height: 'auto' }} />
           </div>
           <div>
             <h1 className="font-bold text-lg leading-tight">Arunachala Hitech</h1>
@@ -92,7 +92,7 @@ export default function Login() {
           {/* Mobile Header (Visible only on small screens) */}
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
              <div className="p-2 bg-primary rounded-xl shadow-lg overflow-hidden">
-                <Image src="/logo.png" alt="Logo" width={24} height={24} className="object-contain" />
+                <Image src="/logo.png" alt="Logo" width={24} height={24} className="object-contain" style={{ width: 'auto', height: 'auto' }} />
              </div>
              <div className="text-center">
                 <h1 className="font-bold text-xl leading-tight">Arunachala Hitech<br/><span className="text-sm font-normal">Engineering College</span></h1>

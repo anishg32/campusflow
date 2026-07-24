@@ -7,6 +7,7 @@ import { LayoutDashboard, Users, Building2, ClipboardCheck, Settings, LogOut, Gr
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import Image from 'next/image';
 
 const navItems = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -68,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="p-8 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/10 overflow-hidden flex items-center justify-center border border-primary/20 shadow-lg p-1">
-                  <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                  <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" style={{ width: 'auto', height: 'auto' }} />
                 </div>
                 <div>
                   <span className="text-sm font-bold text-foreground block leading-tight">Arunachala Hitech</span>

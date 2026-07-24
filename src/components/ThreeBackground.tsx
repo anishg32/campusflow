@@ -67,13 +67,13 @@ function SpaceDust() {
 
   return (
     <group ref={groupRef}>
-      {/* Deep Space Stars */}
-      <Stars radius={100} depth={50} count={7000} factor={4} saturation={0} fade speed={1.5} />
+      {/* Deep Space Stars (Optimized for performance) */}
+      <Stars radius={100} depth={50} count={1500} factor={4} saturation={0} fade speed={1.5} />
       
-      {/* Colorful Galaxy Dust/Sparkles */}
-      <Sparkles count={500} scale={20} size={3} speed={0.2} opacity={0.5} color="#4f46e5" /> {/* Indigo */}
-      <Sparkles count={300} scale={15} size={2} speed={0.4} opacity={0.6} color="#ec4899" /> {/* Pink */}
-      <Sparkles count={200} scale={25} size={4} speed={0.3} opacity={0.4} color="#facc15" /> {/* Gold */}
+      {/* Colorful Galaxy Dust/Sparkles (Optimized counts) */}
+      <Sparkles count={150} scale={20} size={3} speed={0.2} opacity={0.5} color="#4f46e5" /> {/* Indigo */}
+      <Sparkles count={100} scale={15} size={2} speed={0.4} opacity={0.6} color="#ec4899" /> {/* Pink */}
+      <Sparkles count={50} scale={25} size={4} speed={0.3} opacity={0.4} color="#facc15" /> {/* Gold */}
     </group>
   );
 }

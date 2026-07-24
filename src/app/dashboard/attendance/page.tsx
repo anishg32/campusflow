@@ -22,6 +22,7 @@ interface StudentAttendance {
 export default function AttendancePage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDept, setSelectedDept] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [students, setStudents] = useState<StudentAttendance[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,9 +48,11 @@ export default function AttendancePage() {
     setLoading(true);
     setSaved(false);
     try {
-      const data = await apiGet<StudentAttendance[]>(
-        `/attendance?departmentId=${selectedDept}&date=${selectedDate}`
-      );
+      let url = `/attendance?departmentId=${selectedDept}&date=${selectedDate}`;
+      if (selectedYear) {
+        url += `&year=${selectedYear}`;
+      }
+      const data = await apiGet<StudentAttendance[]>(url);
       setStudents(data);
       
       // Pre-populate attendance state from existing records
@@ -71,7 +74,7 @@ export default function AttendancePage() {
     if (selectedDept && selectedDate) {
       fetchAttendance();
     }
-  }, [selectedDept, selectedDate]);
+  }, [selectedDept, selectedDate, selectedYear]);
 
   const toggleAttendance = (studentId: string) => {
     setAttendance((prev) => {
@@ -145,6 +148,20 @@ export default function AttendancePage() {
             {departments.map((dept) => (
               <option key={dept._id} value={dept._id}>{dept.name} ({dept.code})</option>
             ))}
+          </select>
+        </div>
+        <div className="flex-1">
+          <label className="block text-sm font-medium mb-2">Year</label>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-background/50 border border-border focus:border-indigo-500 outline-none transition-all"
+          >
+            <option value="">All Years</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
           </select>
         </div>
         <div className="flex-1">

@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CreditCard, Search, Plus, X, IndianRupee, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { apiGet, apiPost } from '@/lib/api';
+import { CreditCard, Search, Plus, X, IndianRupee, AlertCircle, CheckCircle2, Trash2, History } from 'lucide-react';
+import { apiGet, apiPost, apiDelete } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 interface Fee {
   _id: string;
-  student: { _id: string; name: string; rollNumber: string };
+  student: { _id: string; name: string; rollNumber: string; year?: number };
   department: { _id: string; name: string; code: string };
   title: string;
   totalAmount: number;
@@ -37,8 +37,8 @@ export default function FeesPage() {
   
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  
   const [filterTab, setFilterTab] = useState<'All' | 'Pending' | 'Paid'>('All');
+  const [filterYear, setFilterYear] = useState('');
   
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -52,9 +52,7 @@ export default function FeesPage() {
   
   const { user } = useAuth();
 
-
-
-  async function fetchData() {
+  const fetchData = async () => {
     try {
       setLoading(true);
       const [feesRes, deptsRes, studentsRes] = await Promise.all([
@@ -88,6 +86,7 @@ export default function FeesPage() {
       fetchData();
     } catch (error) {
       console.error('Failed to create fee:', error);
+      alert('Failed to create fee. Please check inputs.');
     }
   };
 
@@ -104,8 +103,20 @@ export default function FeesPage() {
       setSelectedFee(null);
       setPayDetails({ amount: '', method: 'Cash', reference: '' });
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to pay fee:', error);
+      alert(error.message || 'Payment failed.');
+    }
+  };
+
+  const handleDeleteFee = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) return;
+    try {
+      await apiDelete(`/fees/${id}`);
+      fetchData();
+    } catch (error: any) {
+      console.error('Failed to delete fee:', error);
+      alert(error.message || 'Failed to delete fee.');
     }
   };
 
@@ -121,7 +132,7 @@ export default function FeesPage() {
             body { font-family: system-ui, sans-serif; padding: 40px; color: #333; }
             .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
             .details { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }
-            table { w-full: 100%; border-collapse: collapse; margin-top: 20px; width: 100%; }
+            table { border-collapse: collapse; margin-top: 20px; width: 100%; }
             th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
             th { background: #f9f9f9; }
             .total { text-align: right; font-size: 1.2em; font-weight: bold; margin-top: 20px; }
@@ -173,16 +184,20 @@ export default function FeesPage() {
     }, 500);
   };
 
-  const filteredStudents = students.filter(s => {
-    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
-                          s.rollNumber.toLowerCase().includes(search.toLowerCase());
+  const filteredFees = fees.filter(f => {
+    const searchLower = search.toLowerCase();
+    const matchesSearch = 
+      f.student?.name.toLowerCase().includes(searchLower) || 
+      f.student?.rollNumber.toLowerCase().includes(searchLower) ||
+      f.title.toLowerCase().includes(searchLower);
     
     if (!matchesSearch) return false;
-    if (filterTab === 'All') return true;
     
-    const fee = fees.find(f => f.student?._id === s._id);
-    if (filterTab === 'Pending') return fee ? fee.status !== 'Paid' : true;
-    if (filterTab === 'Paid') return fee?.status === 'Paid';
+    if (filterYear && f.student?.year?.toString() !== filterYear) return false;
+
+    if (filterTab === 'All') return true;
+    if (filterTab === 'Pending') return f.status !== 'Paid';
+    if (filterTab === 'Paid') return f.status === 'Paid';
     return true;
   });
 
@@ -194,12 +209,12 @@ export default function FeesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Student Fees</h1>
-          <p className="text-foreground/50 mt-1">Manage and track student fee payments</p>
+          <p className="text-foreground/50 mt-1">Manage and track student fee invoices</p>
         </div>
         {user?.role === 'admin' && (
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 bg-primary text-foreground rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Generate Invoice
@@ -233,7 +248,7 @@ export default function FeesPage() {
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary/20 text-primary-400 rounded-xl">
+            <div className="p-3 bg-primary/20 text-primary rounded-xl">
               <CreditCard className="w-6 h-6" />
             </div>
             <div>
@@ -252,7 +267,7 @@ export default function FeesPage() {
               <button
                 key={tab}
                 onClick={() => setFilterTab(tab as any)}
-                className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all ${filterTab === tab ? 'bg-primary text-white shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
+                className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all ${filterTab === tab ? 'bg-primary text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
               >
                 {tab}
               </button>
@@ -262,20 +277,31 @@ export default function FeesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
             <input 
               type="text" 
-              placeholder="Search by student name or roll..."
+              placeholder="Search by student name, roll or invoice title..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
             />
           </div>
+          <select
+            value={filterYear}
+            onChange={(e) => setFilterYear(e.target.value)}
+            className="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+          >
+            <option value="" className="bg-card">All Years</option>
+            <option value="1" className="bg-card">1st Year</option>
+            <option value="2" className="bg-card">2nd Year</option>
+            <option value="3" className="bg-card">3rd Year</option>
+            <option value="4" className="bg-card">4th Year</option>
+          </select>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-foreground/70">
             <thead className="bg-black/20 text-foreground/50 border-b border-white/10">
               <tr>
+                <th className="px-6 py-4 font-medium">Invoice</th>
                 <th className="px-6 py-4 font-medium">Student</th>
-                <th className="px-6 py-4 font-medium">Department</th>
                 <th className="px-6 py-4 font-medium">Amount</th>
                 <th className="px-6 py-4 font-medium">Paid</th>
                 <th className="px-6 py-4 font-medium">Status</th>
@@ -290,74 +316,70 @@ export default function FeesPage() {
                     <div className="flex justify-center"><div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" /></div>
                   </td>
                 </tr>
-              ) : filteredStudents.length === 0 ? (
+              ) : filteredFees.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-foreground/50">No students found.</td>
+                  <td colSpan={7} className="px-6 py-8 text-center text-foreground/50">No invoices found.</td>
                 </tr>
-              ) : filteredStudents.map((student) => {
-                const fee = fees.find(f => f.student?._id === student._id);
-                
-                return (
-                <tr key={student._id} className="hover:bg-white/5 transition-colors">
+              ) : filteredFees.map((fee) => (
+                <tr key={fee._id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="font-medium text-foreground">{student.name}</div>
-                    <div className="text-xs text-foreground/40">{student.rollNumber}</div>
+                    <div className="font-medium text-foreground">{fee.title}</div>
+                    <div className="text-xs text-foreground/40">{fee.department.code}</div>
                   </td>
-                  <td className="px-6 py-4">{fee ? fee.department.code : (student.department?.code || '-')}</td>
-                  <td className="px-6 py-4 font-medium">{fee ? `₹${fee.totalAmount.toLocaleString()}` : '-'}</td>
-                  <td className="px-6 py-4">{fee ? `₹${fee.paidAmount.toLocaleString()}` : '-'}</td>
                   <td className="px-6 py-4">
-                    {fee ? (
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
-                        fee.status === 'Paid' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
-                        fee.status === 'Partial' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 
-                        'bg-red-500/10 text-red-400 border-red-500/20'
-                      }`}>
-                        {fee.status}
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-1 rounded-full text-xs font-medium border bg-white/5 text-foreground/50 border-white/10">
-                        No Invoice
-                      </span>
+                    <div className="font-medium text-foreground">{fee.student?.name || 'Unknown'}</div>
+                    <div className="text-xs text-foreground/40">{fee.student?.rollNumber || '-'}</div>
+                  </td>
+                  <td className="px-6 py-4 font-medium">₹{fee.totalAmount.toLocaleString()}</td>
+                  <td className="px-6 py-4">₹{fee.paidAmount.toLocaleString()}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
+                      fee.status === 'Paid' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                      fee.status === 'Partial' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 
+                      'bg-red-500/10 text-red-400 border-red-500/20'
+                    }`}>
+                      {fee.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">{new Date(fee.dueDate).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 text-right flex justify-end gap-2 items-center">
+                    {fee.status !== 'Paid' && (
+                      <button 
+                        onClick={() => { setSelectedFee(fee); setIsPayModalOpen(true); }}
+                        className="px-3 py-1.5 bg-primary/20 text-primary-400 rounded-lg text-xs font-medium hover:bg-primary/30 transition-colors"
+                      >
+                        Pay
+                      </button>
                     )}
-                  </td>
-                  <td className="px-6 py-4">{fee ? new Date(fee.dueDate).toLocaleDateString() : '-'}</td>
-                  <td className="px-6 py-4 text-right flex justify-end gap-2">
-                    {fee ? (
+                    {(fee.status === 'Paid' || fee.status === 'Partial') && (
                       <>
-                        {fee.status !== 'Paid' && (
-                          <button 
-                            onClick={() => { setSelectedFee(fee); setIsPayModalOpen(true); }}
-                            className="px-3 py-1.5 bg-primary/20 text-primary-400 rounded-lg text-xs font-medium hover:bg-primary/30 transition-colors"
-                          >
-                            Pay Fee
-                          </button>
-                        )}
-                        {(fee.status === 'Paid' || fee.status === 'Partial') && (
-                          <button 
-                            onClick={() => handlePrintReceipt(fee)}
-                            className="px-3 py-1.5 bg-white/10 text-foreground/70 rounded-lg text-xs font-medium hover:bg-white/20 transition-colors"
-                          >
-                            Receipt
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      user?.role === 'admin' && (
                         <button 
-                          onClick={() => { 
-                            setNewFee(prev => ({ ...prev, studentId: student._id, departmentId: student.department?._id || '' }));
-                            setIsAddModalOpen(true); 
-                          }}
+                          onClick={() => { setSelectedFee(fee); setIsHistoryModalOpen(true); }}
+                          className="p-1.5 bg-white/10 text-foreground/70 rounded-lg hover:bg-white/20 transition-colors"
+                          title="View History"
+                        >
+                          <History size={14} />
+                        </button>
+                        <button 
+                          onClick={() => handlePrintReceipt(fee)}
                           className="px-3 py-1.5 bg-white/10 text-foreground/70 rounded-lg text-xs font-medium hover:bg-white/20 transition-colors"
                         >
-                          Generate
+                          Receipt
                         </button>
-                      )
+                      </>
+                    )}
+                    {user?.role === 'admin' && (
+                      <button
+                        onClick={() => handleDeleteFee(fee._id)}
+                        className="p-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors"
+                        title="Delete Invoice"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     )}
                   </td>
                 </tr>
-              )})}
+              ))}
             </tbody>
           </table>
         </div>
@@ -413,7 +435,7 @@ export default function FeesPage() {
                   <label className="block text-sm font-medium text-foreground/70 mb-1">Due Date</label>
                   <input type="date" required value={newFee.dueDate} onChange={e => setNewFee({...newFee, dueDate: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
                 </div>
-                <button type="submit" className="w-full py-2.5 bg-primary text-foreground rounded-xl font-medium mt-6">Create Invoice{newFee.bulk ? 's' : ''}</button>
+                <button type="submit" className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl font-medium mt-6 hover:bg-primary/90 transition-colors">Create Invoice{newFee.bulk ? 's' : ''}</button>
               </form>
             </motion.div>
           </div>
@@ -430,39 +452,13 @@ export default function FeesPage() {
                 <button onClick={() => { setIsPayModalOpen(false); setSelectedFee(null); }} className="text-foreground/50 hover:text-foreground"><X size={20} /></button>
               </div>
               <div className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10 space-y-2 text-sm text-foreground/70">
-                <p className="flex justify-between"><span>Student:</span> <span className="font-medium text-foreground">{selectedFee.student.name}</span></p>
+                <p className="flex justify-between"><span>Student:</span> <span className="font-medium text-foreground">{selectedFee.student?.name}</span></p>
                 <p className="flex justify-between"><span>Fee Title:</span> <span className="font-medium text-foreground">{selectedFee.title}</span></p>
                 <p className="flex justify-between"><span>Total Fee:</span> <span className="font-medium text-foreground">₹{selectedFee.totalAmount.toLocaleString()}</span></p>
                 <p className="flex justify-between"><span>Already Paid:</span> <span className="font-medium text-green-400">₹{selectedFee.paidAmount.toLocaleString()}</span></p>
                 <div className="h-px bg-white/10 my-2" />
                 <p className="font-medium text-foreground flex justify-between"><span>Remaining:</span> <span className="text-red-400">₹{(selectedFee.totalAmount - selectedFee.paidAmount).toLocaleString()}</span></p>
               </div>
-
-              {selectedFee.payments && selectedFee.payments.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-foreground mb-2">Payment History</h4>
-                  <div className="bg-black/20 rounded-xl border border-white/10 overflow-hidden text-xs">
-                    <table className="w-full text-left">
-                      <thead className="bg-white/5 border-b border-white/10">
-                        <tr>
-                          <th className="px-3 py-2 font-medium">Date</th>
-                          <th className="px-3 py-2 font-medium">Method</th>
-                          <th className="px-3 py-2 font-medium">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                        {selectedFee.payments.map((p, i) => (
-                          <tr key={i}>
-                            <td className="px-3 py-2 text-foreground/70">{new Date(p.date).toLocaleDateString()}</td>
-                            <td className="px-3 py-2 text-foreground/70">{p.method}</td>
-                            <td className="px-3 py-2 font-medium text-green-400">₹{p.amount.toLocaleString()}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
 
               <form onSubmit={handlePayFee} className="space-y-4">
                 <div>
@@ -484,14 +480,15 @@ export default function FeesPage() {
                     <label className="block text-sm font-medium text-foreground/70 mb-1">Payment Method</label>
                     <select required value={payDetails.method} onChange={e => setPayDetails({...payDetails, method: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
                       <option value="Cash" className="bg-card">Cash</option>
-                      <option value="UPI" className="bg-card">UPI</option>
+                      <option value="GPay" className="bg-card">GPay</option>
+                      <option value="UPI" className="bg-card">Other UPI</option>
                       <option value="Bank Transfer" className="bg-card">Bank Transfer</option>
                       <option value="Card" className="bg-card">Card</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-foreground/70 mb-1">Reference No.</label>
-                    <input type="text" placeholder="Optional" value={payDetails.reference} onChange={e => setPayDetails({...payDetails, reference: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
+                    <input type="text" placeholder="e.g., UPI ID / Txn ID" value={payDetails.reference} onChange={e => setPayDetails({...payDetails, reference: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
                   </div>
                 </div>
                 <button type="submit" className="w-full py-2.5 bg-green-500 text-foreground rounded-xl font-medium mt-6 hover:bg-green-600 transition-colors">Record Payment</button>
@@ -500,6 +497,59 @@ export default function FeesPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Payment History Modal */}
+      <AnimatePresence>
+        {isHistoryModalOpen && selectedFee && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-card border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">Payment History</h3>
+                  <p className="text-sm text-foreground/60 mt-1">{selectedFee.title} - {selectedFee.student?.name}</p>
+                </div>
+                <button onClick={() => { setIsHistoryModalOpen(false); setSelectedFee(null); }} className="text-foreground/50 hover:text-foreground"><X size={20} /></button>
+              </div>
+
+              {selectedFee.payments && selectedFee.payments.length > 0 ? (
+                <div className="bg-black/20 rounded-xl border border-white/10 overflow-hidden text-sm">
+                  <table className="w-full text-left">
+                    <thead className="bg-white/5 border-b border-white/10 text-foreground/70">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Date</th>
+                        <th className="px-4 py-3 font-medium">Method</th>
+                        <th className="px-4 py-3 font-medium">Ref</th>
+                        <th className="px-4 py-3 font-medium text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {selectedFee.payments.map((p, i) => (
+                        <tr key={i} className="hover:bg-white/5 transition-colors">
+                          <td className="px-4 py-3 text-foreground/70">{new Date(p.date).toLocaleDateString()}</td>
+                          <td className="px-4 py-3 text-foreground/70">{p.method}</td>
+                          <td className="px-4 py-3 text-foreground/50 font-mono text-xs">{p.reference || '-'}</td>
+                          <td className="px-4 py-3 font-medium text-green-400 text-right">₹{p.amount.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="border-t border-white/10 bg-white/5">
+                      <tr>
+                        <td colSpan={3} className="px-4 py-3 font-semibold text-right text-foreground">Total Paid:</td>
+                        <td className="px-4 py-3 font-bold text-green-400 text-right">₹{selectedFee.paidAmount.toLocaleString()}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-foreground/50">
+                  <p>No payments recorded yet.</p>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

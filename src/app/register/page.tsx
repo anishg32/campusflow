@@ -46,7 +46,7 @@ export default function Register() {
 
         <div className="relative z-10 flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shadow-lg backdrop-blur-sm overflow-hidden p-1">
-            <Image src="/logo.png" alt="Logo" width={40} height={40} className="object-contain" />
+            <Image src="/logo.png" alt="Logo" width={40} height={40} className="object-contain" style={{ width: 'auto', height: 'auto' }} />
           </div>
           <div>
             <span className="font-bold text-2xl tracking-tight text-foreground block leading-tight">Arunachala College</span>
@@ -94,7 +94,7 @@ export default function Register() {
           {/* Mobile Header (Visible only on small screens) */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg overflow-hidden p-1">
-                <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" />
+                <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" style={{ width: 'auto', height: 'auto' }} />
              </div>
              <div>
                 <span className="font-bold text-xl tracking-tight text-foreground block leading-tight">Arunachala College</span>
