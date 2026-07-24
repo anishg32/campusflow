@@ -39,6 +39,7 @@ export default function FeesPage() {
   const [search, setSearch] = useState('');
   const [filterTab, setFilterTab] = useState<'All' | 'Pending' | 'Paid'>('All');
   const [filterYear, setFilterYear] = useState('');
+  const [filterDept, setFilterDept] = useState('');
   
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -194,6 +195,7 @@ export default function FeesPage() {
     if (!matchesSearch) return false;
     
     if (filterYear && f.student?.year?.toString() !== filterYear) return false;
+    if (filterDept && f.department?._id !== filterDept) return false;
 
     if (filterTab === 'All') return true;
     if (filterTab === 'Pending') return f.status !== 'Paid';
@@ -284,6 +286,14 @@ export default function FeesPage() {
             />
           </div>
           <select
+            value={filterDept}
+            onChange={(e) => setFilterDept(e.target.value)}
+            className="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+          >
+            <option value="" className="bg-card">All Departments</option>
+            {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
+          </select>
+          <select
             value={filterYear}
             onChange={(e) => setFilterYear(e.target.value)}
             className="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
@@ -302,6 +312,7 @@ export default function FeesPage() {
               <tr>
                 <th className="px-6 py-4 font-medium">Invoice</th>
                 <th className="px-6 py-4 font-medium">Student</th>
+                <th className="px-6 py-4 font-medium">Department</th>
                 <th className="px-6 py-4 font-medium">Amount</th>
                 <th className="px-6 py-4 font-medium">Paid</th>
                 <th className="px-6 py-4 font-medium">Status</th>
@@ -312,13 +323,13 @@ export default function FeesPage() {
             <tbody className="divide-y divide-white/5">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-foreground/50">
+                  <td colSpan={8} className="px-6 py-8 text-center text-foreground/50">
                     <div className="flex justify-center"><div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" /></div>
                   </td>
                 </tr>
               ) : filteredFees.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-foreground/50">No invoices found.</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-foreground/50">No invoices found.</td>
                 </tr>
               ) : filteredFees.map((fee) => (
                 <tr key={fee._id} className="hover:bg-white/5 transition-colors">
@@ -329,6 +340,9 @@ export default function FeesPage() {
                   <td className="px-6 py-4">
                     <div className="font-medium text-foreground">{fee.student?.name || 'Unknown'}</div>
                     <div className="text-xs text-foreground/40">{fee.student?.rollNumber || '-'}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-2 py-1 bg-primary/10 text-primary rounded-lg text-xs font-medium">{fee.department?.code || '-'}</span>
                   </td>
                   <td className="px-6 py-4 font-medium">₹{fee.totalAmount.toLocaleString()}</td>
                   <td className="px-6 py-4">₹{fee.paidAmount.toLocaleString()}</td>
