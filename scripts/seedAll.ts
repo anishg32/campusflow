@@ -43,8 +43,7 @@ async function seedAll() {
     ];
 
     const usersCollection = db.collection('users');
-    // Keep admin, delete other faculty
-    await usersCollection.deleteMany({ role: 'faculty' });
+    await usersCollection.deleteMany({ role: 'faculty', email: { $ne: 'faculty@college.edu' } });
     const facultyResult = await usersCollection.insertMany(
       facultyData.map(f => ({ ...f, avatar: 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg', createdAt: new Date(), updatedAt: new Date() }))
     );
@@ -63,6 +62,21 @@ async function seedAll() {
     const firstNames = ['Arun', 'Bharath', 'Deepa', 'Ganesh', 'Harini', 'Ishaan', 'Janani', 'Kavitha', 'Manoj', 'Nithya', 'Pavithra', 'Ramesh', 'Santhosh', 'Tharun', 'Usha', 'Vignesh', 'Yamini', 'Zara', 'Akash', 'Divya', 'Surya', 'Meena', 'Ravi', 'Sneha', 'Vikram', 'Anjali', 'Prasad', 'Keerthi', 'Ashok', 'Lavanya'];
     const sections = ['A', 'B'];
     let rollCounter = 1;
+
+    // Add Demo Student explicitly
+    studentsData.push({
+      name: 'Student Demo',
+      rollNumber: 'DEMO001',
+      phoneNumber: '9876543210',
+      email: 'student@college.edu',
+      department: deptIds[0], // CS
+      year: 1,
+      section: 'A',
+      parentName: 'Demo Parent',
+      parentPhoneNumber: '9876543211',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
     for (let deptIdx = 0; deptIdx < deptIds.length; deptIdx++) {
       for (let year = 1; year <= 4; year++) {
@@ -186,6 +200,47 @@ async function seedAll() {
     await attendanceCollection.insertMany(attendanceData);
     console.log(`   ✅ Created ${attendanceData.length} attendance records`);
 
+    // ===== 6. MARKS =====
+    console.log('\n📝 Seeding Marks...');
+    const marksData: any[] = [];
+    const examTypes = ['Class Test', 'Internal Exam', 'Semester Exam'];
+    const subjects = ['Mathematics', 'Physics', 'Computer Programming', 'Data Structures', 'Database Systems'];
+
+    for (let i = 0; i < studentIds.length; i++) {
+      const student = studentsData[i];
+      // Generate marks for 2-3 subjects per student to avoid duplicates easily
+      const numSubjects = 2 + Math.floor(Math.random() * 2);
+      
+      // Shuffle subjects and pick first 'numSubjects'
+      const shuffledSubjects = [...subjects].sort(() => 0.5 - Math.random()).slice(0, numSubjects);
+
+      for (let s = 0; s < shuffledSubjects.length; s++) {
+        const subjectName = shuffledSubjects[s];
+        const examType = examTypes[Math.floor(Math.random() * examTypes.length)];
+        const maxMarks = examType === 'Semester Exam' ? 100 : examType === 'Internal Exam' ? 50 : 25;
+        
+        const minPassingPercentage = 0.4;
+        const marksObtained = Math.floor(maxMarks * (minPassingPercentage + Math.random() * (1 - minPassingPercentage)));
+
+        marksData.push({
+          student: studentIds[i],
+          department: student.department,
+          subjectName,
+          examType,
+          marksObtained,
+          maxMarks,
+          date: new Date(2025, 1 + Math.floor(Math.random() * 4), 1 + Math.floor(Math.random() * 28)),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    }
+
+    const marksCollection = db.collection('marks');
+    await marksCollection.deleteMany({});
+    await marksCollection.insertMany(marksData);
+    console.log(`   ✅ Created ${marksData.length} mark records`);
+
     // ===== SUMMARY =====
     console.log('\n🎉 ===== SEEDING COMPLETE =====');
     console.log(`   📚 ${deptIds.length} Departments`);
@@ -193,6 +248,7 @@ async function seedAll() {
     console.log(`   🎓 ${studentIds.length} Students`);
     console.log(`   💰 ${feesData.length} Fee Records`);
     console.log(`   📋 ${attendanceData.length} Attendance Records`);
+    console.log(`   📝 ${marksData.length} Mark Records`);
     console.log('\n   Login credentials:');
     console.log('   Admin   → admin@college.edu / admin123');
     console.log('   Faculty → rajesh@college.edu / faculty123');

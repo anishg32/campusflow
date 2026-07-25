@@ -6,7 +6,7 @@ import connectDB from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
-    await verifyAuth(req);
+    const session = await verifyAuth(req);
     await connectDB();
 
     const { searchParams } = new URL(req.url);
@@ -14,6 +14,14 @@ export async function GET(req: NextRequest) {
     
     const filter: any = {};
     if (department) filter.department = department;
+
+    if (session.role === 'student') {
+      const currentStudent = await Student.findOne({ email: session.email });
+      if (!currentStudent) {
+        return NextResponse.json([]);
+      }
+      filter.student = currentStudent._id;
+    }
 
     const fees = await Fee.find(filter)
       .populate('student', 'name rollNumber year')

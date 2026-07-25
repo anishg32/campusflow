@@ -215,7 +215,7 @@ export default function FeesPage() {
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Student Fees</h1>
           <p className="text-foreground/50 mt-1">Manage and track student fee invoices</p>
         </div>
-        {user?.role === 'admin' && (
+        {(user?.role === 'admin' || user?.role === 'faculty') && (
           <button 
             onClick={() => setIsAddModalOpen(true)}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
@@ -287,25 +287,29 @@ export default function FeesPage() {
               className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
             />
           </div>
-          <select
-            value={filterDept}
-            onChange={(e) => setFilterDept(e.target.value)}
-            className="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-          >
-            <option value="" className="bg-card">All Departments</option>
-            {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
-          </select>
-          <select
-            value={filterYear}
-            onChange={(e) => setFilterYear(e.target.value)}
-            className="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-          >
-            <option value="" className="bg-card">All Years</option>
-            <option value="1" className="bg-card">1st Year</option>
-            <option value="2" className="bg-card">2nd Year</option>
-            <option value="3" className="bg-card">3rd Year</option>
-            <option value="4" className="bg-card">4th Year</option>
-          </select>
+          {user?.role !== 'student' && (
+            <>
+              <select
+                value={filterDept}
+                onChange={(e) => setFilterDept(e.target.value)}
+                className="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+              >
+                <option value="" className="bg-card">All Departments</option>
+                {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
+              </select>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                className="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+              >
+                <option value="" className="bg-card">All Years</option>
+                <option value="1" className="bg-card">1st Year</option>
+                <option value="2" className="bg-card">2nd Year</option>
+                <option value="3" className="bg-card">3rd Year</option>
+                <option value="4" className="bg-card">4th Year</option>
+              </select>
+            </>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -384,7 +388,7 @@ export default function FeesPage() {
                         </button>
                       </>
                     )}
-                    {user?.role === 'admin' && (
+                    {(user?.role === 'admin' || user?.role === 'faculty') && (
                       <button
                         onClick={() => handleDeleteFee(fee._id)}
                         className="p-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors"
@@ -426,20 +430,25 @@ export default function FeesPage() {
                     {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
                   </select>
                 </div>
-                {!newFee.bulk ? (
+                <div>
+                  <label className="block text-sm font-medium text-foreground/70 mb-1">Year</label>
+                  <select value={newFee.year} onChange={e => setNewFee({...newFee, year: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
+                    <option value="" className="bg-card">All Years</option>
+                    {[1, 2, 3, 4].map(y => <option key={y} value={y} className="bg-card">Year {y}</option>)}
+                  </select>
+                </div>
+                {!newFee.bulk && (
                   <div>
                     <label className="block text-sm font-medium text-foreground/70 mb-1">Student</label>
                     <select required value={newFee.studentId} onChange={e => setNewFee({...newFee, studentId: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
                       <option value="" className="bg-card">Select Student</option>
-                      {students.filter(s => !newFee.departmentId || (s as any).department === newFee.departmentId || (s as any).department?._id === newFee.departmentId).map(s => <option key={s._id} value={s._id} className="bg-card">{s.name} ({s.rollNumber})</option>)}
-                    </select>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/70 mb-1">Year</label>
-                    <select value={newFee.year} onChange={e => setNewFee({...newFee, year: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
-                      <option value="" className="bg-card">All Years</option>
-                      {[1, 2, 3, 4].map(y => <option key={y} value={y} className="bg-card">Year {y}</option>)}
+                      {students
+                        .filter(s => {
+                          if (newFee.departmentId && (s as any).department !== newFee.departmentId && (s as any).department?._id !== newFee.departmentId) return false;
+                          if (newFee.year && (s as any).year?.toString() !== newFee.year.toString()) return false;
+                          return true;
+                        })
+                        .map(s => <option key={s._id} value={s._id} className="bg-card">{s.name} ({s.rollNumber})</option>)}
                     </select>
                   </div>
                 )}

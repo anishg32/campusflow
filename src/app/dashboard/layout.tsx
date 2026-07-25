@@ -15,6 +15,7 @@ const navItems = [
   { name: 'Departments', href: '/dashboard/departments', icon: Building2 },
   { name: 'Attendance', href: '/dashboard/attendance', icon: ClipboardCheck },
   { name: 'Fees', href: '/dashboard/fees', icon: CreditCard },
+  { name: 'Marks', href: '/dashboard/marks', icon: GraduationCap },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
@@ -82,18 +83,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                
-                return (
-                  <Link key={item.name} href={item.href}>
-                    <div className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 ${isActive ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(79,70,229,0.3)]' : 'hover:bg-muted text-foreground/60 hover:text-foreground'}`}>
-                      <Icon size={20} className={isActive ? 'text-primary-foreground' : 'opacity-70'} />
-                      <span className="font-medium text-[15px]">{item.name}</span>
-                    </div>
-                  </Link>
-                );
+              {navItems
+                .filter(item => {
+                  if (user?.role === 'student') {
+                    // Only show Overview, Students (My Profile), Settings for students
+                    return ['Overview', 'Students', 'Settings'].includes(item.name);
+                  }
+                  return true;
+                })
+                .map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  const displayName = (user?.role === 'student' && item.name === 'Students') ? 'My Profile' : item.name;
+                  
+                  return (
+                    <Link key={item.name} href={item.href}>
+                      <div className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 ${isActive ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(79,70,229,0.3)]' : 'hover:bg-muted text-foreground/60 hover:text-foreground'}`}>
+                        <Icon size={20} className={isActive ? 'text-primary-foreground' : 'opacity-70'} />
+                        <span className="font-medium text-[15px]">{displayName}</span>
+                      </div>
+                    </Link>
+                  );
               })}
             </nav>
 

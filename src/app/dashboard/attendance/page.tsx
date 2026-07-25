@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ClipboardCheck, Calendar, Check, X as XIcon } from 'lucide-react';
+import { ClipboardCheck, Calendar, Check, X as XIcon, MessageCircle } from 'lucide-react';
 import { apiGet, apiPost } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface Department {
   _id: string;
@@ -16,15 +17,18 @@ interface StudentAttendance {
   name: string;
   rollNumber: string;
   phoneNumber: string;
+  parentPhoneNumber?: string;
   status: 'present' | 'absent' | null;
 }
 
 export default function AttendancePage() {
+  const { user } = useAuth();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [students, setStudents] = useState<StudentAttendance[]>([]);
+  const [studentHistory, setStudentHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -39,30 +43,35 @@ export default function AttendancePage() {
         console.error('Failed to fetch departments:', err);
       }
     };
-    fetchDepts();
-  }, []);
-
-
+    if (user?.role !== 'student') {
+      fetchDepts();
+    }
+  }, [user?.role]);
 
   async function fetchAttendance() {
     setLoading(true);
     setSaved(false);
     try {
-      let url = `/attendance?departmentId=${selectedDept}&date=${selectedDate}`;
-      if (selectedYear) {
-        url += `&year=${selectedYear}`;
-      }
-      const data = await apiGet<StudentAttendance[]>(url);
-      setStudents(data);
-      
-      // Pre-populate attendance state from existing records
-      const existingAttendance: Record<string, 'present' | 'absent'> = {};
-      data.forEach((s) => {
-        if (s.status) {
-          existingAttendance[s._id] = s.status;
+      if (user?.role === 'student') {
+        const data = await apiGet<any[]>('/attendance');
+        setStudentHistory(data);
+      } else {
+        let url = `/attendance?departmentId=${selectedDept}&date=${selectedDate}`;
+        if (selectedYear) {
+          url += `&year=${selectedYear}`;
         }
-      });
-      setAttendance(existingAttendance);
+        const data = await apiGet<StudentAttendance[]>(url);
+        setStudents(data);
+        
+        // Pre-populate attendance state from existing records
+        const existingAttendance: Record<string, 'present' | 'absent'> = {};
+        data.forEach((s) => {
+          if (s.status) {
+            existingAttendance[s._id] = s.status;
+          }
+        });
+        setAttendance(existingAttendance);
+      }
     } catch (err) {
       console.error('Failed to fetch attendance:', err);
     } finally {
@@ -71,10 +80,10 @@ export default function AttendancePage() {
   };
 
   useEffect(() => {
-    if (selectedDept && selectedDate) {
+    if (user?.role === 'student' || (selectedDept && selectedDate)) {
       fetchAttendance();
     }
-  }, [selectedDept, selectedDate, selectedYear]);
+  }, [selectedDept, selectedDate, selectedYear, user?.role]);
 
   const toggleAttendance = (studentId: string) => {
     setAttendance((prev) => {
@@ -132,12 +141,52 @@ export default function AttendancePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Attendance</h1>
-        <p className="text-foreground/60 text-sm mt-1">Mark and view student attendance</p>
+        <p className="text-foreground/60 text-sm mt-1">{user?.role === 'student' ? 'View your attendance history' : 'Mark and view student attendance'}</p>
       </div>
 
-      {/* Controls */}
-      <div className="glass rounded-2xl p-6 flex flex-col sm:flex-row gap-4 items-end">
-        <div className="flex-1">
+      {user?.role === 'student' ? (
+        <div className="glass rounded-2xl overflow-hidden mt-6">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left px-6 py-4 text-sm font-bold text-foreground/60">Date</th>
+                <th className="text-left px-6 py-4 text-sm font-bold text-foreground/60">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {studentHistory.map((record, i) => (
+                <motion.tr
+                  key={record._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.02 }}
+                  className={`border-b border-border/50 transition-colors ${
+                    record.status === 'present' ? 'bg-emerald-500/5' : record.status === 'absent' ? 'bg-red-500/5' : ''
+                  }`}
+                >
+                  <td className="px-6 py-4">{new Date(record.date).toLocaleDateString()}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      record.status === 'present' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'
+                    }`}>
+                      {record.status?.toUpperCase() || 'UNKNOWN'}
+                    </span>
+                  </td>
+                </motion.tr>
+              ))}
+              {studentHistory.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={2} className="px-6 py-8 text-center text-foreground/40">No attendance records found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <>
+          {/* Controls */}
+          <div className="glass rounded-2xl p-6 flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1">
           <label className="block text-sm font-medium mb-2">Department</label>
           <select
             value={selectedDept}
@@ -288,6 +337,15 @@ export default function AttendancePage() {
                             >
                               <XIcon size={16} />
                             </button>
+                            {status === 'absent' && (
+                              <a
+                                href={`sms:${student.parentPhoneNumber || student.phoneNumber}?body=${encodeURIComponent('your son will did not come to college why?')}`}
+                                className="p-2 ml-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
+                                title="Message Parent"
+                              >
+                                <MessageCircle size={16} />
+                              </a>
+                            )}
                           </div>
                         </td>
                       </motion.tr>
@@ -330,6 +388,8 @@ export default function AttendancePage() {
               )}
             </button>
           </div>
+        </>
+      )}
         </>
       )}
     </div>

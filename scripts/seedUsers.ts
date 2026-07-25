@@ -11,7 +11,7 @@ if (!MONGODB_URI) {
 const users = [
   { name: 'Admin User', email: 'admin@college.edu', password: 'admin123', role: Role.ADMIN },
   { name: 'Faculty Member', email: 'faculty@college.edu', password: 'faculty123', role: Role.FACULTY },
-  { name: 'Student Demo', email: 'student@college.edu', password: 'student123', role: Role.FACULTY } 
+  { name: 'Student Demo', email: 'student@college.edu', password: 'student123', role: Role.STUDENT } 
 ];
 
 async function seed() {

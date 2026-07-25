@@ -20,11 +20,8 @@ export default function Login() {
     e.preventDefault();
     setError('');
     
-    if (role === 'Student') {
-      setError('Student portal is under construction.');
-      return;
-    }
     
+
     setLoading(true);
     try {
       await login(email, password);

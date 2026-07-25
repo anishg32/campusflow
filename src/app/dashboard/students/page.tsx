@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Phone, Edit2, Trash2, X, UserPlus } from 'lucide-react';
+import { Search, Phone, Edit2, Trash2, X, UserPlus, Lock, GraduationCap, ClipboardCheck, CreditCard } from 'lucide-react';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface Department {
   _id: string;
@@ -25,18 +26,19 @@ interface Student {
 }
 
 export default function StudentsPage() {
+  const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterDept, setFilterDept] = useState('');
+  const [filterYear, setFilterYear] = useState('');
+  
+  // Admin form state
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
-  const [filterYear, setFilterYear] = useState('');
-
-  // Form fields
   const [name, setName] = useState('');
   const [rollNumber, setRollNumber] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -47,12 +49,27 @@ export default function StudentsPage() {
   const [parentName, setParentName] = useState('');
   const [parentPhoneNumber, setParentPhoneNumber] = useState('');
 
+  // Student Privacy form state
+  const [privacyVerified, setPrivacyVerified] = useState(false);
+  const [verifyRoll, setVerifyRoll] = useState('');
+  const [verifyName, setVerifyName] = useState('');
+  const [verifyDept, setVerifyDept] = useState('');
+  const [verifyYear, setVerifyYear] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+
+  // Student Unified Dashboard data
+  const [studentAttendance, setStudentAttendance] = useState<any[]>([]);
+  const [studentFees, setStudentFees] = useState<any[]>([]);
+  const [studentMarks, setStudentMarks] = useState<any[]>([]);
+
   const fetchStudents = async () => {
     try {
       let path = '/students?';
       if (filterDept) path += `department=${filterDept}&`;
       if (filterYear) path += `year=${filterYear}&`;
       if (search) path += `search=${search}&`;
+
       const data = await apiGet<Student[]>(path);
       setStudents(data);
     } catch (err) {
@@ -76,12 +93,13 @@ export default function StudentsPage() {
   }, []);
 
   useEffect(() => {
+    if (user?.role === 'student') return;
     setLoading(true);
     const timer = setTimeout(() => {
       fetchStudents();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, filterDept, filterYear]);
+  }, [search, filterDept, filterYear, user]);
 
   const resetForm = () => {
     setName('');
@@ -151,6 +169,266 @@ export default function StudentsPage() {
     }
   };
 
+  // Student specific logic
+  const fetchStudentDashboardData = async () => {
+    try {
+      const [attData, feesData, marksData] = await Promise.all([
+        apiGet<any[]>('/attendance'),
+        apiGet<any[]>('/fees'),
+        apiGet<any[]>('/marks')
+      ]);
+      setStudentAttendance(attData);
+      setStudentFees(feesData);
+      setStudentMarks(marksData);
+    } catch (err) {
+      console.error('Failed to fetch dashboard data:', err);
+    }
+  };
+
+  const handleVerifyPrivacy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyRoll || !verifyName || !verifyDept || !verifyYear) {
+      setVerifyError('Please fill out all verification fields');
+      return;
+    }
+    setVerifyLoading(true);
+    setVerifyError('');
+    try {
+      const data = await apiGet<Student[]>(
+        `/students?verifyRoll=${verifyRoll}&verifyName=${verifyName}&verifyDept=${verifyDept}&verifyYear=${verifyYear}`
+      );
+      if (data && data.length > 0) {
+        setStudents(data);
+        setPrivacyVerified(true);
+        fetchStudentDashboardData();
+      } else {
+        setVerifyError('Verification failed. No matching student record found.');
+      }
+    } catch (err) {
+      setVerifyError('Verification failed. Please check your details.');
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  if (user?.role === 'student') {
+    if (!privacyVerified) {
+      return (
+        <div className="space-y-6 max-w-7xl mx-auto flex items-center justify-center min-h-[70vh]">
+          <div className="w-full max-w-md">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">My Student Profile</h1>
+              <p className="text-foreground/60 text-sm mt-1">Verify your identity to view your details</p>
+            </div>
+            <div className="mt-8 bg-card border border-border rounded-xl shadow-lg p-6">
+              <div className="flex justify-center mb-6">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                  <Lock size={24} />
+                </div>
+              </div>
+              <h2 className="text-xl font-bold text-center mb-2">Privacy Verification</h2>
+              <p className="text-foreground/60 text-sm text-center mb-6">Please enter your details to view your record.</p>
+              
+              {verifyError && (
+                <div className="mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-sm font-medium text-center">
+                  {verifyError}
+                </div>
+              )}
+
+              <form onSubmit={handleVerifyPrivacy} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Roll Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={verifyRoll}
+                    onChange={(e) => setVerifyRoll(e.target.value)}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    placeholder="e.g. CS2024001"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={verifyName}
+                    onChange={(e) => setVerifyName(e.target.value)}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    placeholder="Exact full name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Department</label>
+                  <select
+                    required
+                    value={verifyDept}
+                    onChange={(e) => setVerifyDept(e.target.value)}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-primary outline-none transition-all"
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((dept) => (
+                      <option key={dept._id} value={dept._id}>{dept.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Year of Study</label>
+                  <select
+                    required
+                    value={verifyYear}
+                    onChange={(e) => setVerifyYear(e.target.value)}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-primary outline-none transition-all"
+                  >
+                    <option value="">Select Year</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  disabled={verifyLoading}
+                  className="w-full py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-70 mt-2"
+                >
+                  {verifyLoading ? 'Verifying...' : 'View My Details'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const myProfile = students[0];
+    
+    return (
+      <div className="space-y-8 max-w-7xl mx-auto pb-12">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
+            <p className="text-foreground/60 text-sm mt-1">Welcome back, {myProfile?.name}</p>
+          </div>
+        </div>
+
+        {/* Profile Card */}
+        <div className="bg-card border border-border rounded-2xl shadow-sm p-6 flex flex-col md:flex-row gap-6 items-center md:items-start relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center text-white font-bold text-3xl shadow-lg shrink-0 z-10">
+            {myProfile?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'S'}
+          </div>
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 w-full z-10">
+            <div>
+              <p className="text-foreground/50 text-xs font-medium uppercase tracking-wider mb-1">Full Name</p>
+              <p className="font-semibold text-lg">{myProfile?.name}</p>
+            </div>
+            <div>
+              <p className="text-foreground/50 text-xs font-medium uppercase tracking-wider mb-1">Roll Number</p>
+              <p className="font-mono font-medium text-lg text-primary">{myProfile?.rollNumber}</p>
+            </div>
+            <div>
+              <p className="text-foreground/50 text-xs font-medium uppercase tracking-wider mb-1">Department & Year</p>
+              <p className="font-medium">{myProfile?.department?.name} • Year {myProfile?.year}</p>
+            </div>
+            <div>
+              <p className="text-foreground/50 text-xs font-medium uppercase tracking-wider mb-1">Contact</p>
+              <p className="font-medium">{myProfile?.phoneNumber}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Attendance Box */}
+          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 lg:col-span-1 flex flex-col h-[400px]">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
+                <ClipboardCheck size={20} />
+              </div>
+              <h2 className="text-lg font-bold">Attendance</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-2">
+              {studentAttendance.length === 0 ? (
+                <p className="text-foreground/50 text-sm text-center py-8">No attendance records.</p>
+              ) : (
+                studentAttendance.map((record: any) => (
+                  <div key={record._id} className="flex items-center justify-between p-3 rounded-lg bg-foreground/[0.02] border border-border/50">
+                    <span className="text-sm font-medium">{new Date(record.date).toLocaleDateString()}</span>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-md ${record.status === 'present' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                      {record.status.toUpperCase()}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Fees Box */}
+          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 lg:col-span-1 flex flex-col h-[400px]">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-purple-500/10 text-purple-500 rounded-lg">
+                <CreditCard size={20} />
+              </div>
+              <h2 className="text-lg font-bold">Fee Status</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+              {studentFees.length === 0 ? (
+                <p className="text-foreground/50 text-sm text-center py-8">No fee records.</p>
+              ) : (
+                studentFees.map((fee: any) => (
+                  <div key={fee._id} className="p-4 rounded-xl bg-foreground/[0.02] border border-border/50">
+                    <p className="font-semibold text-sm mb-1">{fee.title}</p>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-lg font-bold text-foreground">₹{fee.totalAmount}</span>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${fee.status === 'paid' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                        {fee.status.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Marks Box */}
+          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 lg:col-span-1 flex flex-col h-[400px]">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-indigo-500/10 text-indigo-500 rounded-lg">
+                <GraduationCap size={20} />
+              </div>
+              <h2 className="text-lg font-bold">Latest Marks</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+              {studentMarks.length === 0 ? (
+                <p className="text-foreground/50 text-sm text-center py-8">No mark records.</p>
+              ) : (
+                studentMarks.map((mark: any) => (
+                  <div key={mark._id} className="p-4 rounded-xl bg-foreground/[0.02] border border-border/50">
+                    <p className="font-semibold text-sm mb-1">{mark.subject}</p>
+                    <p className="text-xs text-foreground/50 mb-3">{mark.examType}</p>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 h-2 bg-foreground/10 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-indigo-500 rounded-full"
+                          style={{ width: `${(mark.marksObtained / mark.totalMarks) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="font-bold text-sm">{mark.marksObtained}/{mark.totalMarks}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // Admin View
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

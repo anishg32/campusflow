@@ -6,7 +6,7 @@ import connectDB from '@/lib/db';
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await verifyAuth(req);
-    if (user.role !== 'admin') {
+    if (user.role !== 'admin' && user.role !== 'faculty') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
     }
 

@@ -6,7 +6,7 @@ import connectDB from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
-    await verifyAuth(req);
+    const session = await verifyAuth(req);
     await connectDB();
 
     const { searchParams } = new URL(req.url);
@@ -25,6 +25,24 @@ export async function GET(req: NextRequest) {
         { rollNumber: { $regex: search, $options: 'i' } },
         { phoneNumber: { $regex: search, $options: 'i' } },
       ];
+    }
+
+    if (session.role === 'student') {
+      const verifyRoll = searchParams.get('verifyRoll');
+      const verifyName = searchParams.get('verifyName');
+      const verifyDept = searchParams.get('verifyDept');
+      const verifyYear = searchParams.get('verifyYear');
+
+      if (!verifyRoll || !verifyName || !verifyDept || !verifyYear) {
+        return NextResponse.json({ message: 'Missing verification details' }, { status: 400 });
+      }
+      filter.rollNumber = { $regex: new RegExp(`^${verifyRoll}$`, 'i') };
+      filter.name = { $regex: new RegExp(`^${verifyName}$`, 'i') };
+      filter.department = verifyDept;
+      filter.year = Number(verifyYear);
+      
+      // Clear $or since we are forcing an exact match for privacy
+      delete filter.$or;
     }
 
     const students = await Student.find(filter)

@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 export enum Role {
   FACULTY = 'faculty',
   ADMIN = 'admin',
+  STUDENT = 'student',
 }
 
 export interface IUser extends Document {

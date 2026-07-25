@@ -8,7 +8,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'faculty' | 'admin';
+  role: 'faculty' | 'admin' | 'student';
   avatar?: string;
   department?: string;
   token: string;
