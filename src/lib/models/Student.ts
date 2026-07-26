@@ -10,6 +10,8 @@ export interface IStudent extends Document {
   section: string;
   parentName?: string;
   parentPhoneNumber?: string;
+  gender?: string;
+  dateOfBirth?: Date;
 }
 
 const studentSchema = new Schema<IStudent>(
@@ -51,6 +53,13 @@ const studentSchema = new Schema<IStudent>(
     },
     parentPhoneNumber: {
       type: String,
+    },
+    gender: {
+      type: String,
+      enum: ['Male', 'Female', 'Other'],
+    },
+    dateOfBirth: {
+      type: Date,
     },
   },
   {

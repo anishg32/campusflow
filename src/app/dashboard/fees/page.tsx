@@ -48,7 +48,7 @@ export default function FeesPage() {
   const [selectedFee, setSelectedFee] = useState<Fee | null>(null);
 
   // Form states
-  const [newFee, setNewFee] = useState({ departmentId: '', studentId: '', title: '', totalAmount: '', dueDate: '', bulk: false, year: '' });
+  const [newFee, setNewFee] = useState({ departmentId: '', studentId: '', title: '', tuitionFee: '', busFee: '', sportsFee: '', bookFee: '', examFee: '', dueFee: '', dueDate: '', bulk: false, year: '', semester: '' });
   const [payDetails, setPayDetails] = useState({ amount: '', method: 'Cash', reference: '' });
   
   const { user } = useAuth();
@@ -77,13 +77,32 @@ export default function FeesPage() {
 
   const handleCreateFee = async (e: React.FormEvent) => {
     e.preventDefault();
+    const tuition = Number(newFee.tuitionFee || 0);
+    const bus = Number(newFee.busFee || 0);
+    const sports = Number(newFee.sportsFee || 0);
+    const book = Number(newFee.bookFee || 0);
+    const exam = Number(newFee.examFee || 0);
+    const due = Number(newFee.dueFee || 0);
+    const totalAmount = tuition + bus + sports + book + exam + due;
+
+    if (totalAmount <= 0) {
+      alert("Total amount must be greater than 0");
+      return;
+    }
+
     try {
       await apiPost('/fees', {
         ...newFee,
-        totalAmount: Number(newFee.totalAmount)
+        totalAmount,
+        tuitionFee: tuition,
+        busFee: bus,
+        sportsFee: sports,
+        bookFee: book,
+        examFee: exam,
+        dueFee: due
       });
       setIsAddModalOpen(false);
-      setNewFee({ departmentId: '', studentId: '', title: '', totalAmount: '', dueDate: '', bulk: false, year: '' });
+      setNewFee({ departmentId: '', studentId: '', title: '', tuitionFee: '', busFee: '', sportsFee: '', bookFee: '', examFee: '', dueFee: '', dueDate: '', bulk: false, year: '', semester: '' });
       fetchData();
     } catch (error) {
       console.error('Failed to create fee:', error);
@@ -409,12 +428,13 @@ export default function FeesPage() {
       <AnimatePresence>
         {isAddModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-card border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-              <div className="flex justify-between items-center mb-6">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-card border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl flex flex-col max-h-[90vh]">
+              <div className="flex justify-between items-center mb-6 shrink-0">
                 <h3 className="text-xl font-bold text-foreground">Generate Invoice</h3>
                 <button onClick={() => setIsAddModalOpen(false)} className="text-foreground/50 hover:text-foreground"><X size={20} /></button>
               </div>
-              <form onSubmit={handleCreateFee} className="space-y-4">
+              <div className="overflow-y-auto pr-2 -mr-2">
+                <form onSubmit={handleCreateFee} className="space-y-4">
                 <div className="flex items-center gap-2 mb-4 p-3 bg-black/20 rounded-xl border border-white/10">
                   <input type="checkbox" id="bulk" checked={newFee.bulk} onChange={e => setNewFee({...newFee, bulk: e.target.checked})} className="w-4 h-4 rounded bg-black/40 border-white/20 text-primary focus:ring-primary focus:ring-offset-black" />
                   <label htmlFor="bulk" className="text-sm font-medium text-foreground">Bulk Generate for Department</label>
@@ -430,12 +450,21 @@ export default function FeesPage() {
                     {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-1">Year</label>
-                  <select value={newFee.year} onChange={e => setNewFee({...newFee, year: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
-                    <option value="" className="bg-card">All Years</option>
-                    {[1, 2, 3, 4].map(y => <option key={y} value={y} className="bg-card">Year {y}</option>)}
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Year</label>
+                    <select value={newFee.year} onChange={e => setNewFee({...newFee, year: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
+                      <option value="" className="bg-card">All Years</option>
+                      {[1, 2, 3, 4].map(y => <option key={y} value={y} className="bg-card">Year {y}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Semester</label>
+                    <select value={newFee.semester} onChange={e => setNewFee({...newFee, semester: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
+                      <option value="" className="bg-card">All Sems</option>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s} className="bg-card">Sem {s}</option>)}
+                    </select>
+                  </div>
                 </div>
                 {!newFee.bulk && (
                   <div>
@@ -452,16 +481,43 @@ export default function FeesPage() {
                     </select>
                   </div>
                 )}
-                <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-1">Total Amount (₹)</label>
-                  <input type="number" required value={newFee.totalAmount} onChange={e => setNewFee({...newFee, totalAmount: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Tuition Fee (₹)</label>
+                    <input type="number" min="0" value={newFee.tuitionFee} onChange={e => setNewFee({...newFee, tuitionFee: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Bus Fee (₹)</label>
+                    <input type="number" min="0" value={newFee.busFee} onChange={e => setNewFee({...newFee, busFee: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Sports Fee (₹)</label>
+                    <input type="number" min="0" value={newFee.sportsFee} onChange={e => setNewFee({...newFee, sportsFee: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Book Fee (₹)</label>
+                    <input type="number" min="0" value={newFee.bookFee} onChange={e => setNewFee({...newFee, bookFee: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Exam Fee (₹)</label>
+                    <input type="number" min="0" value={newFee.examFee} onChange={e => setNewFee({...newFee, examFee: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Due Fee (₹)</label>
+                    <input type="number" min="0" value={newFee.dueFee} onChange={e => setNewFee({...newFee, dueFee: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
+                  </div>
+                </div>
+                <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl">
+                  <p className="text-sm font-medium text-foreground/70">Total Amount</p>
+                  <p className="text-2xl font-bold text-primary">₹{(Number(newFee.tuitionFee || 0) + Number(newFee.busFee || 0) + Number(newFee.sportsFee || 0) + Number(newFee.bookFee || 0) + Number(newFee.examFee || 0) + Number(newFee.dueFee || 0)).toLocaleString()}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-1">Due Date</label>
                   <input type="date" required value={newFee.dueDate} onChange={e => setNewFee({...newFee, dueDate: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50" />
                 </div>
-                <button type="submit" className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl font-medium mt-6 hover:bg-primary/90 transition-colors">Create Invoice{newFee.bulk ? 's' : ''}</button>
+                <button type="submit" className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl font-medium mt-6 shrink-0 hover:bg-primary/90 transition-colors">Create Invoice{newFee.bulk ? 's' : ''}</button>
               </form>
+              </div>
             </motion.div>
           </div>
         )}

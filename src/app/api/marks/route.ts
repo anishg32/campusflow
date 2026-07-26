@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const marks = await Mark.find(query)
       .populate('student', 'name rollNumber year section')
       .populate('department', 'name code')
-      .sort({ date: -1, createdAt: -1 });
+      .sort({ semester: -1, subjectName: 1 });
       
     return NextResponse.json(marks);
   } catch (error: any) {
@@ -57,19 +57,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(marks, { status: 201 });
     }
     
-    const { student, department, subjectName, examType, marksObtained, maxMarks, date } = body;
+    const { student, department, semester, subjectName, examType, marksObtained, maxMarks, date, assignmentMarks, internalExamMarks, grade } = body;
     
-    if (!student || !department || !subjectName || !examType || marksObtained === undefined || maxMarks === undefined) {
+    if (!student || !department || !semester || !subjectName || !examType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+    if (examType === 'Semester Exam' && !grade) {
+      return NextResponse.json({ error: 'Grade is required for Semester Exam' }, { status: 400 });
+    }
+
     
     const mark = await Mark.create({
       student,
       department,
+      semester: Number(semester),
       subjectName,
       examType,
-      marksObtained: Number(marksObtained),
-      maxMarks: Number(maxMarks),
+      marksObtained: examType === 'Semester Exam' ? undefined : (marksObtained !== undefined && marksObtained !== '' ? Number(marksObtained) : undefined),
+      maxMarks: examType === 'Semester Exam' ? undefined : (maxMarks !== undefined && maxMarks !== '' ? Number(maxMarks) : undefined),
+      grade: examType === 'Semester Exam' ? grade : undefined,
+      assignmentMarks: assignmentMarks ? Number(assignmentMarks) : undefined,
+      internalExamMarks: internalExamMarks ? Number(internalExamMarks) : undefined,
       date: date ? new Date(date) : new Date(),
     });
     

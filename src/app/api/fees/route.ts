@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     await verifyAuth(req);
     await connectDB();
 
-    const { studentId, departmentId, year, title, totalAmount, dueDate, bulk } = await req.json();
+    const { studentId, departmentId, year, semester, title, totalAmount, tuitionFee, busFee, sportsFee, bookFee, examFee, dueFee, dueDate, bulk } = await req.json();
 
     if (bulk) {
       if (!departmentId) {
@@ -58,7 +58,14 @@ export async function POST(req: NextRequest) {
         title: title || 'General Fee',
         student: s._id,
         department: departmentId,
+        semester,
         totalAmount,
+        tuitionFee,
+        busFee,
+        sportsFee,
+        bookFee,
+        examFee,
+        dueFee,
         dueDate,
         payments: []
       }));
@@ -77,7 +84,14 @@ export async function POST(req: NextRequest) {
       title: title || 'General Fee',
       student: studentId,
       department: departmentId,
+      semester,
       totalAmount,
+      tuitionFee,
+      busFee,
+      sportsFee,
+      bookFee,
+      examFee,
+      dueFee,
       dueDate,
       payments: []
     });

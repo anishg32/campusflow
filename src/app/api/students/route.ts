@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     await verifyAuth(req);
     await connectDB();
 
-    const { name, rollNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber } = await req.json();
+    const { name, rollNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth } = await req.json();
 
     const existing = await Student.findOne({ rollNumber });
     if (existing) {
@@ -82,10 +82,31 @@ export async function POST(req: NextRequest) {
       section: section || 'A',
       parentName,
       parentPhoneNumber,
+      gender,
+      dateOfBirth,
     });
 
     const populated = await student.populate('department', 'name code');
     return NextResponse.json(populated, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    await verifyAuth(req);
+    await connectDB();
+
+    const { studentIds } = await req.json();
+
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return NextResponse.json({ message: 'No students provided for deletion' }, { status: 400 });
+    }
+
+    await Student.deleteMany({ _id: { $in: studentIds } });
+
+    return NextResponse.json({ message: 'Students deleted successfully' }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }

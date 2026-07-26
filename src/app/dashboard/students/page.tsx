@@ -23,6 +23,8 @@ interface Student {
   section: string;
   parentName?: string;
   parentPhoneNumber?: string;
+  gender?: string;
+  dateOfBirth?: string | Date;
 }
 
 export default function StudentsPage() {
@@ -33,6 +35,12 @@ export default function StudentsPage() {
   const [search, setSearch] = useState('');
   const [filterDept, setFilterDept] = useState('');
   const [filterYear, setFilterYear] = useState('');
+  
+  // Bulk promote state
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [showPromoteModal, setShowPromoteModal] = useState(false);
+  const [promoteLoading, setPromoteLoading] = useState(false);
+  const [promoteTargetYear, setPromoteTargetYear] = useState('next');
   
   // Admin form state
   const [showForm, setShowForm] = useState(false);
@@ -48,6 +56,8 @@ export default function StudentsPage() {
   const [section, setSection] = useState('A');
   const [parentName, setParentName] = useState('');
   const [parentPhoneNumber, setParentPhoneNumber] = useState('');
+  const [gender, setGender] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
 
   // Student Privacy form state
   const [privacyVerified, setPrivacyVerified] = useState(false);
@@ -97,9 +107,40 @@ export default function StudentsPage() {
     setLoading(true);
     const timer = setTimeout(() => {
       fetchStudents();
+      setSelectedStudentIds([]); // Clear selection when filters change
     }, 300);
     return () => clearTimeout(timer);
   }, [search, filterDept, filterYear, user]);
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedStudentIds(students.map(s => s._id));
+    } else {
+      setSelectedStudentIds([]);
+    }
+  };
+
+  const handleSelectStudent = (id: string) => {
+    setSelectedStudentIds(prev => 
+      prev.includes(id) ? prev.filter(sId => sId !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkPromote = async () => {
+    if (selectedStudentIds.length === 0) return;
+    setPromoteLoading(true);
+    try {
+      const res = await apiPost<any>('/students/promote', { studentIds: selectedStudentIds, targetYear: promoteTargetYear });
+      alert(res.message || 'Students promoted successfully');
+      setShowPromoteModal(false);
+      setSelectedStudentIds([]);
+      fetchStudents();
+    } catch (error: any) {
+      alert(error.message || 'Failed to promote students');
+    } finally {
+      setPromoteLoading(false);
+    }
+  };
 
   const resetForm = () => {
     setName('');
@@ -111,6 +152,8 @@ export default function StudentsPage() {
     setSection('A');
     setParentName('');
     setParentPhoneNumber('');
+    setGender('');
+    setDateOfBirth('');
     setFormError('');
     setEditingStudent(null);
   };
@@ -131,6 +174,8 @@ export default function StudentsPage() {
     setSection(student.section);
     setParentName(student.parentName || '');
     setParentPhoneNumber(student.parentPhoneNumber || '');
+    setGender(student.gender || '');
+    setDateOfBirth(student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : '');
     setFormError('');
     setShowForm(true);
   };
@@ -141,7 +186,7 @@ export default function StudentsPage() {
     setFormLoading(true);
 
     try {
-      const payload = { name, rollNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber };
+      const payload = { name, rollNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth };
       
       if (editingStudent) {
         await apiPut(`/students/${editingStudent._id}`, payload);
@@ -166,6 +211,17 @@ export default function StudentsPage() {
       fetchStudents();
     } catch (err: any) {
       alert(err.message || 'Failed to delete student');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedStudentIds.length} students?`)) return;
+    try {
+      await apiDelete('/students', { studentIds: selectedStudentIds });
+      setSelectedStudentIds([]);
+      fetchStudents();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete students');
     }
   };
 
@@ -316,7 +372,7 @@ export default function StudentsPage() {
         <div className="bg-card border border-border rounded-2xl shadow-sm p-6 flex flex-col md:flex-row gap-6 items-center md:items-start relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
           <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center text-white font-bold text-3xl shadow-lg shrink-0 z-10">
-            {myProfile?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'S'}
+            {myProfile?.name ? myProfile.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : 'S'}
           </div>
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 w-full z-10">
             <div>
@@ -339,10 +395,10 @@ export default function StudentsPage() {
         </div>
 
         {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           
           {/* Attendance Box */}
-          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 lg:col-span-1 flex flex-col h-[400px]">
+          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 flex flex-col h-[400px]">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
                 <ClipboardCheck size={20} />
@@ -357,7 +413,7 @@ export default function StudentsPage() {
                   <div key={record._id} className="flex items-center justify-between p-3 rounded-lg bg-foreground/[0.02] border border-border/50">
                     <span className="text-sm font-medium">{new Date(record.date).toLocaleDateString()}</span>
                     <span className={`text-xs font-bold px-2 py-1 rounded-md ${record.status === 'present' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
-                      {record.status.toUpperCase()}
+                      {record.status?.toUpperCase() || 'UNKNOWN'}
                     </span>
                   </div>
                 ))
@@ -366,25 +422,32 @@ export default function StudentsPage() {
           </div>
 
           {/* Fees Box */}
-          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 lg:col-span-1 flex flex-col h-[400px]">
+          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 flex flex-col h-[400px]">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-purple-500/10 text-purple-500 rounded-lg">
+              <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg">
                 <CreditCard size={20} />
               </div>
-              <h2 className="text-lg font-bold">Fee Status</h2>
+              <h2 className="text-lg font-bold">Fee Details</h2>
             </div>
-            <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+            <div className="flex-1 overflow-y-auto pr-2 space-y-2">
               {studentFees.length === 0 ? (
-                <p className="text-foreground/50 text-sm text-center py-8">No fee records.</p>
+                <p className="text-foreground/50 text-sm text-center py-8">No fee records found.</p>
               ) : (
                 studentFees.map((fee: any) => (
-                  <div key={fee._id} className="p-4 rounded-xl bg-foreground/[0.02] border border-border/50">
-                    <p className="font-semibold text-sm mb-1">{fee.title}</p>
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-lg font-bold text-foreground">₹{fee.totalAmount}</span>
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${fee.status === 'paid' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'}`}>
-                        {fee.status.toUpperCase()}
+                  <div key={fee._id} className="flex flex-col p-3 rounded-lg bg-foreground/[0.02] border border-border/50">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-sm font-bold">{fee.title}</span>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-md ${
+                        fee.status === 'Paid' ? 'bg-emerald-500/10 text-emerald-500' : 
+                        fee.status === 'Partial' ? 'bg-amber-500/10 text-amber-500' : 
+                        'bg-red-500/10 text-red-500'
+                      }`}>
+                        {fee.status?.toUpperCase() || 'PENDING'}
                       </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-foreground/70">
+                      <span>Amount: ₹{fee.totalAmount}</span>
+                      <span>Paid: ₹{fee.paidAmount}</span>
                     </div>
                   </div>
                 ))
@@ -393,36 +456,34 @@ export default function StudentsPage() {
           </div>
 
           {/* Marks Box */}
-          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 lg:col-span-1 flex flex-col h-[400px]">
+          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 flex flex-col h-[400px]">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-indigo-500/10 text-indigo-500 rounded-lg">
+              <div className="p-2 bg-purple-500/10 text-purple-500 rounded-lg">
                 <GraduationCap size={20} />
               </div>
-              <h2 className="text-lg font-bold">Latest Marks</h2>
+              <h2 className="text-lg font-bold">Marks & Grades</h2>
             </div>
-            <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+            <div className="flex-1 overflow-y-auto pr-2 space-y-2">
               {studentMarks.length === 0 ? (
-                <p className="text-foreground/50 text-sm text-center py-8">No mark records.</p>
+                <p className="text-foreground/50 text-sm text-center py-8">No marks recorded yet.</p>
               ) : (
                 studentMarks.map((mark: any) => (
-                  <div key={mark._id} className="p-4 rounded-xl bg-foreground/[0.02] border border-border/50">
-                    <p className="font-semibold text-sm mb-1">{mark.subject}</p>
-                    <p className="text-xs text-foreground/50 mb-3">{mark.examType}</p>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 h-2 bg-foreground/10 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-indigo-500 rounded-full"
-                          style={{ width: `${(mark.marksObtained / mark.totalMarks) * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="font-bold text-sm">{mark.marksObtained}/{mark.totalMarks}</span>
+                  <div key={mark._id} className="flex flex-col p-3 rounded-lg bg-foreground/[0.02] border border-border/50">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-bold truncate max-w-[150px]" title={mark.subjectName}>{mark.subjectName}</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-primary/10 text-primary">
+                        {mark.examType}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-foreground/70 mt-1">
+                      <span>Score: {mark.marksObtained} / {mark.maxMarks}</span>
+                      {mark.grade && <span className="font-bold text-foreground">Grade: {mark.grade}</span>}
                     </div>
                   </div>
                 ))
               )}
             </div>
           </div>
-
         </div>
       </div>
     );
@@ -436,13 +497,33 @@ export default function StudentsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Students</h1>
           <p className="text-foreground/60 text-sm mt-1">Manage all student records in the system</p>
         </div>
-        <button
-          onClick={openAddForm}
-          className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm text-sm"
-        >
-          <UserPlus size={16} />
-          Add Student
-        </button>
+        <div className="flex gap-2">
+          {selectedStudentIds.length > 0 && (
+            <>
+              <button
+                onClick={handleBulkDelete}
+                className="px-5 py-2.5 bg-red-500/10 text-red-500 rounded-lg font-medium hover:bg-red-500/20 transition-colors flex items-center gap-2 shadow-sm text-sm"
+              >
+                <Trash2 size={16} />
+                Delete Selected ({selectedStudentIds.length})
+              </button>
+              <button
+                onClick={() => setShowPromoteModal(true)}
+                className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2 shadow-sm text-sm"
+              >
+                <GraduationCap size={16} />
+                Promote Selected ({selectedStudentIds.length})
+              </button>
+            </>
+          )}
+          <button
+            onClick={openAddForm}
+            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm text-sm"
+          >
+            <UserPlus size={16} />
+            Add Student
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -495,6 +576,9 @@ export default function StudentsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-foreground/[0.02]">
+                  <th className="w-12 px-6 py-3">
+                    <input type="checkbox" checked={students.length > 0 && selectedStudentIds.length === students.length} onChange={handleSelectAll} className="w-4 h-4 rounded border-border bg-background cursor-pointer accent-primary" />
+                  </th>
                   <th className="text-left px-6 py-3 font-semibold text-foreground/70">Name</th>
                   <th className="text-left px-6 py-3 font-semibold text-foreground/70">Roll No.</th>
                   <th className="text-left px-6 py-3 font-semibold text-foreground/70">Phone</th>
@@ -514,9 +598,12 @@ export default function StudentsPage() {
                     className="border-b border-border hover:bg-foreground/[0.02] transition-colors"
                   >
                     <td className="px-6 py-3">
+                      <input type="checkbox" checked={selectedStudentIds.includes(student._id)} onChange={() => handleSelectStudent(student._id)} className="w-4 h-4 rounded border-border bg-background cursor-pointer accent-primary" />
+                    </td>
+                    <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                          {student.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                          {student.name ? student.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : 'S'}
                         </div>
                         <div>
                           <p className="font-medium text-foreground">{student.name}</p>
@@ -667,6 +754,31 @@ export default function StudentsPage() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1.5 text-foreground/80">Gender</label>
+                      <select
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        className="w-full px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-primary outline-none transition-all"
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1.5 text-foreground/80">Date of Birth</label>
+                      <input
+                        type="date"
+                        value={dateOfBirth}
+                        onChange={(e) => setDateOfBirth(e.target.value)}
+                        className="w-full px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-1.5 text-foreground/80">Department *</label>
                     <select
@@ -730,6 +842,63 @@ export default function StudentsPage() {
                   className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm"
                 >
                   {formLoading ? 'Saving...' : editingStudent ? 'Update Student' : 'Add Student'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Promote Modal */}
+      <AnimatePresence>
+        {showPromoteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card border border-border w-full max-w-md rounded-2xl shadow-xl p-6"
+            >
+              <h2 className="text-xl font-bold mb-4">Confirm Bulk Promotion</h2>
+              <p className="text-foreground/70 text-sm mb-4">
+                You are about to promote <strong>{selectedStudentIds.length}</strong> selected students.
+                <br/><br/>
+                Note: Students currently in Year 4 will not be promoted further if incrementing, as Year 4 is the maximum.
+              </p>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-1.5 text-foreground/80">Select Target Year</label>
+                <select
+                  value={promoteTargetYear}
+                  onChange={(e) => setPromoteTargetYear(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-primary outline-none transition-all"
+                >
+                  <option value="next">Increment to Next Year (Automatic)</option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowPromoteModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-foreground/5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBulkPromote}
+                  disabled={promoteLoading}
+                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {promoteLoading ? 'Promoting...' : 'Confirm Promotion'}
                 </button>
               </div>
             </motion.div>

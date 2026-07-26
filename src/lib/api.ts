@@ -66,7 +66,7 @@ export async function apiGet<T>(path: string): Promise<T> {
   return handleResponse<T>(response);
 }
 
-export async function apiPost<T>(path: string, body?: Record<string, unknown>): Promise<T> {
+export async function apiPost<T>(path: string, body?: Record<string, unknown> | unknown[]): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
     headers: buildHeaders(),
@@ -84,10 +84,11 @@ export async function apiPut<T>(path: string, body?: Record<string, unknown>): P
   return handleResponse<T>(response);
 }
 
-export async function apiDelete<T>(path: string): Promise<T> {
+export async function apiDelete<T>(path: string, body?: Record<string, unknown> | unknown[]): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
     method: 'DELETE',
     headers: buildHeaders(),
+    body: body ? JSON.stringify(body) : undefined,
   });
   return handleResponse<T>(response);
 }

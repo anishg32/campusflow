@@ -31,7 +31,7 @@ export async function PUT(
     await connectDB();
     const resolvedParams = await params;
 
-    const { name, rollNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber } = await req.json();
+    const { name, rollNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth } = await req.json();
 
     const student = await Student.findById(resolvedParams.id);
     if (!student) {
@@ -54,6 +54,8 @@ export async function PUT(
     if (section) student.section = section;
     if (parentName !== undefined) student.parentName = parentName;
     if (parentPhoneNumber !== undefined) student.parentPhoneNumber = parentPhoneNumber;
+    if (gender !== undefined) student.gender = gender;
+    if (dateOfBirth !== undefined) student.dateOfBirth = dateOfBirth;
 
     await student.save();
     const populated = await student.populate('department', 'name code');

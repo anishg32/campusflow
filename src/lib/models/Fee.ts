@@ -17,11 +17,18 @@ export interface IFee extends Document {
   title: string;
   student: mongoose.Types.ObjectId;
   totalAmount: number;
+  tuitionFee: number;
+  busFee: number;
+  sportsFee: number;
+  bookFee: number;
+  examFee: number;
+  dueFee: number;
   paidAmount: number;
   status: FeeStatus;
   dueDate: Date;
   lastPaymentDate?: Date;
   department: mongoose.Types.ObjectId;
+  semester?: number;
   payments: IPayment[];
 }
 
@@ -42,9 +49,36 @@ const feeSchema = new Schema<IFee>(
       ref: 'Department',
       required: true,
     },
+    semester: {
+      type: Number,
+    },
     totalAmount: {
       type: Number,
       required: true,
+    },
+    tuitionFee: {
+      type: Number,
+      default: 0,
+    },
+    busFee: {
+      type: Number,
+      default: 0,
+    },
+    sportsFee: {
+      type: Number,
+      default: 0,
+    },
+    bookFee: {
+      type: Number,
+      default: 0,
+    },
+    examFee: {
+      type: Number,
+      default: 0,
+    },
+    dueFee: {
+      type: Number,
+      default: 0,
     },
     paidAmount: {
       type: Number,
