@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, X, GraduationCap, CheckCircle2, AlertCircle, Trash2, Edit, Bell, TrendingDown, Lightbulb, CheckCircle, Clock } from 'lucide-react';
 import { apiGet, apiPost, apiDelete, apiPut } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useSearchParams } from 'next/navigation';
 
 interface Mark {
   _id: string;
@@ -33,15 +34,27 @@ interface Student {
   year: number;
 }
 
-const semesterSubjects: Record<number, string[]> = {
-  1: ['Professional English I', 'Matrices and Calculus', 'Engineering Physics', 'Engineering Chemistry', 'Problem Solving and Python Programming', 'Heritage of Tamils'],
-  2: ['Professional English II', 'Statistics and Numerical Methods', 'Physics for Information Science', 'Basic Electrical and Electronics Engineering', 'Engineering Graphics', 'Tamils and Technology', 'Programming in C'],
-  3: ['Discrete Mathematics', 'Digital Principles and Computer Organization', 'Foundations of Data Science', 'Data Structures', 'Object Oriented Programming'],
-  4: ['Probability and Statistics', 'Software Engineering', 'Operating Systems', 'Database Management Systems', 'Design and Analysis of Algorithms'],
-  5: ['Computer Networks', 'Compiler Design', 'Object Oriented Analysis and Design', 'Distributed Computing', 'Open Elective I', 'Professional Elective I'],
-  6: ['Artificial Intelligence and Machine Learning', 'Cryptography and Network Security', 'Mobile Computing', 'Open Elective II', 'Professional Elective II', 'Professional Elective III'],
-  7: ['Human Computer Interaction', 'Open Elective III', 'Professional Elective IV', 'Professional Elective V', 'Professional Elective VI'],
-  8: ['Project Work']
+const semesterSubjects: Record<string, Record<number, string[]>> = {
+  '2021': {
+    1: ['Induction Programme', 'Professional English - I', 'Matrices and Calculus', 'Engineering Physics', 'Engineering Chemistry', 'Problem Solving and Python Programming', 'Heritage of Tamils'],
+    2: ['Professional English - II', 'Statistics and Numerical Methods', 'Physics for Information Science', 'Basic Electrical and Electronics Engineering', 'Engineering Graphics', 'Programming in C', 'Tamils and Technology'],
+    3: ['Discrete Mathematics', 'Digital Principles and Computer Organization', 'Foundations of Data Science', 'Data Structures', 'Object Oriented Programming'],
+    4: ['Theory of Computation', 'Artificial Intelligence and Machine Learning', 'Database Management Systems', 'Algorithms', 'Introduction to Operating Systems', 'Environmental Sciences and Sustainability'],
+    5: ['Computer Networks', 'Compiler Design', 'Cryptography and Cyber Security', 'Distributed Computing', 'Professional Elective I', 'Professional Elective II', 'Mandatory Course-I'],
+    6: ['Object Oriented Software Engineering', 'Embedded Systems and IoT', 'Open Elective - I', 'Professional Elective III', 'Professional Elective IV', 'Professional Elective V', 'Professional Elective VI', 'Mandatory Course-II'],
+    7: ['Human Values and Ethics', 'Total Quality Management', 'Industrial Management', 'Project Report Writing', 'Summer Internship'],
+    8: ['Project Work/Internship']
+  },
+  '2025': {
+    1: ['Induction Programme', 'Professional English - I', 'Matrices and Calculus', 'Engineering Physics', 'Engineering Chemistry', 'Problem Solving and Python Programming', 'Heritage of Tamils'],
+    2: ['Professional English - II', 'Statistics and Numerical Methods', 'Physics for Information Science', 'Basic Electrical and Electronics Engineering', 'Engineering Graphics', 'Programming in C', 'Tamils and Technology'],
+    3: ['Discrete Mathematics', 'Digital Principles and Computer Organization', 'Foundations of Data Science', 'Data Structures', 'Object Oriented Programming'],
+    4: ['Theory of Computation', 'Artificial Intelligence and Machine Learning', 'Database Management Systems', 'Algorithms', 'Introduction to Operating Systems', 'Environmental Sciences and Sustainability'],
+    5: ['Computer Networks', 'Compiler Design', 'Cryptography and Cyber Security', 'Distributed Computing', 'Professional Elective I', 'Professional Elective II', 'Mandatory Course-I'],
+    6: ['Object Oriented Software Engineering', 'Embedded Systems and IoT', 'Open Elective - I', 'Professional Elective III', 'Professional Elective IV', 'Professional Elective V', 'Professional Elective VI', 'Mandatory Course-II'],
+    7: ['Human Values and Ethics', 'Total Quality Management', 'Industrial Management', 'Project Report Writing', 'Summer Internship'],
+    8: ['Project Work/Internship']
+  }
 };
 
 export default function MarksPage() {
@@ -77,10 +90,11 @@ export default function MarksPage() {
   });
 
   const [formData, setFormData] = useState({
+    regulation: '2021',
     student: '',
     department: '',
     semester: '1',
-    subjectName: semesterSubjects[1][0],
+    subjectName: semesterSubjects['2021'][1][0],
     examType: 'Class Test',
     marksObtained: '',
     maxMarks: '20',
@@ -120,6 +134,15 @@ export default function MarksPage() {
     fetchData();
   }, []);
 
+  // Auto-apply filter from URL search params (e.g. from notification click)
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam === 'needs-improvement') {
+      setFilterExamType('Needs Improvement');
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (isModalOpen || showReportModal || selectedPlanMark) {
       document.body.style.overflow = 'hidden';
@@ -155,7 +178,7 @@ export default function MarksPage() {
     try {
       if (entryMode === 'bulk-subjects' && !editMark) {
         const payloadArray = [];
-        const subjects = semesterSubjects[Number(formData.semester)] || [];
+        const subjects = semesterSubjects[formData.regulation]?.[Number(formData.semester)] || [];
         for (const subject of subjects) {
           const b = bulkMarks[subject];
           if (!b) continue; // Skip if no data for this subject
@@ -271,7 +294,17 @@ export default function MarksPage() {
 
   const openEditModal = (mark: Mark) => {
     setEditMark(mark);
+    
+    let inferredRegulation = '2021';
+    for (const reg of ['2021', '2025']) {
+      if (semesterSubjects[reg]?.[mark.semester || 1]?.includes(mark.subjectName)) {
+        inferredRegulation = reg;
+        break;
+      }
+    }
+
     setFormData({
+      regulation: inferredRegulation,
       student: mark.student._id,
       department: mark.department._id,
       semester: mark.semester?.toString() || '1',
@@ -289,10 +322,11 @@ export default function MarksPage() {
 
   const resetForm = () => {
     setFormData({
+      regulation: '2021',
       student: '',
       department: '',
       semester: '1',
-      subjectName: semesterSubjects[1][0],
+      subjectName: semesterSubjects['2021'][1][0],
       examType: 'Class Test 1',
       marksObtained: '',
       maxMarks: '20',
@@ -671,24 +705,39 @@ export default function MarksPage() {
                     </button>
                   </div>
                 )}
-                <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-1">Department</label>
-                  <select required value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
-                    <option value="" className="bg-card">Select Dept</option>
-                    {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Regulation</label>
+                    <select required value={formData.regulation} onChange={e => {
+                      const reg = e.target.value;
+                      const sem = Number(formData.semester) || 1;
+                      setFormData({...formData, regulation: reg, subjectName: semesterSubjects[reg]?.[sem]?.[0] || ''});
+                    }} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
+                      <option value="2021" className="bg-card">Regulation 2021</option>
+                      <option value="2025" className="bg-card">Regulation 2025</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Department</label>
+                    <select required value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
+                      <option value="" className="bg-card">Select Dept</option>
+                      {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-1">Student</label>
-                  <select required value={formData.student} onChange={e => setFormData({...formData, student: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
-                    <option value="" className="bg-card">Select Student</option>
-                    {students.filter(s => !formData.department || (s.department as any) === formData.department || (s.department as any)?._id === formData.department).map(s => <option key={s._id} value={s._id} className="bg-card">{s.name} ({s.rollNumber})</option>)}
-                  </select>
-                </div>
+                {entryMode !== 'bulk-students' && (
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1">Student</label>
+                    <select required value={formData.student} onChange={e => setFormData({...formData, student: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
+                      <option value="" className="bg-card">Select Student</option>
+                      {students.filter(s => !formData.department || (s.department as any) === formData.department || (s.department as any)?._id === formData.department).map(s => <option key={s._id} value={s._id} className="bg-card">{s.name} ({s.rollNumber})</option>)}
+                    </select>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-foreground/70 mb-1">Semester</label>
-                    <select required value={formData.semester} onChange={e => setFormData({...formData, semester: e.target.value, subjectName: semesterSubjects[Number(e.target.value)]?.[0] || ''})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
+                    <select required value={formData.semester} onChange={e => setFormData({...formData, semester: e.target.value, subjectName: semesterSubjects[formData.regulation]?.[Number(e.target.value)]?.[0] || ''})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
                       {[1,2,3,4,5,6,7,8].map(sem => (
                         <option key={sem} value={sem} className="bg-card">Semester {sem}</option>
                       ))}
@@ -698,7 +747,7 @@ export default function MarksPage() {
                     <div>
                       <label className="block text-sm font-medium text-foreground/70 mb-1">Subject Name</label>
                       <select required value={formData.subjectName} onChange={e => setFormData({...formData, subjectName: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
-                        {semesterSubjects[Number(formData.semester) || 1]?.map(sub => (
+                        {semesterSubjects[formData.regulation]?.[Number(formData.semester) || 1]?.map(sub => (
                           <option key={sub} value={sub} className="bg-card">{sub}</option>
                         ))}
                       </select>
@@ -741,7 +790,7 @@ export default function MarksPage() {
                 </div>
                 {entryMode === 'bulk-subjects' ? (
                   <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-                    {semesterSubjects[Number(formData.semester)]?.map(subject => (
+                    {semesterSubjects[formData.regulation]?.[Number(formData.semester)]?.map(subject => (
                       <div key={subject} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-black/20 rounded-lg border border-white/10">
                         <p className="text-sm font-medium flex-1 pr-2 leading-tight">{subject}</p>
                         <div className="w-full sm:w-[220px] grid grid-cols-2 gap-2 shrink-0">

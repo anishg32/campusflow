@@ -9,14 +9,14 @@ const mongoUriMatch = envConfig.match(/MONGO_URI=(.*)/);
 const MONGODB_URI = mongoUriMatch ? mongoUriMatch[1].trim() : '';
 
 const semesterSubjects: Record<number, string[]> = {
-  1: ['Professional English I', 'Matrices and Calculus', 'Engineering Physics', 'Engineering Chemistry', 'Problem Solving and Python Programming', 'Heritage of Tamils'],
-  2: ['Professional English II', 'Statistics and Numerical Methods', 'Physics for Information Science', 'Basic Electrical and Electronics Engineering', 'Engineering Graphics', 'Tamils and Technology', 'Programming in C'],
+  1: ['Induction Programme', 'Professional English - I', 'Matrices and Calculus', 'Engineering Physics', 'Engineering Chemistry', 'Problem Solving and Python Programming', 'Heritage of Tamils'],
+  2: ['Professional English - II', 'Statistics and Numerical Methods', 'Physics for Information Science', 'Basic Electrical and Electronics Engineering', 'Engineering Graphics', 'Programming in C', 'Tamils and Technology'],
   3: ['Discrete Mathematics', 'Digital Principles and Computer Organization', 'Foundations of Data Science', 'Data Structures', 'Object Oriented Programming'],
-  4: ['Probability and Statistics', 'Software Engineering', 'Operating Systems', 'Database Management Systems', 'Design and Analysis of Algorithms'],
-  5: ['Computer Networks', 'Compiler Design', 'Object Oriented Analysis and Design', 'Distributed Computing', 'Open Elective I', 'Professional Elective I'],
-  6: ['Mobile Computing', 'Cryptography and Cyber Security', 'Artificial Intelligence', 'Internet of Things', 'Open Elective II', 'Professional Elective II'],
-  7: ['Human Computer Interaction', 'Cloud Computing', 'Professional Elective III', 'Professional Elective IV'],
-  8: ['Project Work']
+  4: ['Theory of Computation', 'Artificial Intelligence and Machine Learning', 'Database Management Systems', 'Algorithms', 'Introduction to Operating Systems', 'Environmental Sciences and Sustainability'],
+  5: ['Computer Networks', 'Compiler Design', 'Cryptography and Cyber Security', 'Distributed Computing', 'Professional Elective I', 'Professional Elective II', 'Mandatory Course-I'],
+  6: ['Object Oriented Software Engineering', 'Embedded Systems and IoT', 'Open Elective - I', 'Professional Elective III', 'Professional Elective IV', 'Professional Elective V', 'Professional Elective VI', 'Mandatory Course-II'],
+  7: ['Human Values and Ethics', 'Total Quality Management', 'Industrial Management', 'Project Report Writing', 'Summer Internship'],
+  8: ['Project Work/Internship']
 };
 
 const grades = ['O', 'A+', 'A', 'B+', 'B', 'C', 'U'];

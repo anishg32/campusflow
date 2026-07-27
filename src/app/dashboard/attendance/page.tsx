@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ClipboardCheck, Calendar, Check, X as XIcon, MessageCircle } from 'lucide-react';
 import { apiGet, apiPost } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
@@ -136,6 +136,21 @@ export default function AttendancePage() {
 
   const presentCount = Object.values(attendance).filter((s) => s === 'present').length;
   const absentCount = Object.values(attendance).filter((s) => s === 'absent').length;
+
+  const sendWhatsAppMessage = (student: StudentAttendance, status: 'present' | 'absent', date: string) => {
+    const phone = student.parentPhoneNumber || student.phoneNumber;
+    if (!phone) {
+      alert("Phone number not available.");
+      return;
+    }
+    const deptName = departments.find(d => d._id === selectedDept)?.name || 'Unknown Department';
+    const year = selectedYear || 'Unknown Year';
+
+    const message = `Dear Parent,\n\nThis is to inform you that your child, ${student.name} (Roll No: ${student.rollNumber}), was marked ${status === 'present' ? 'Present' : 'Absent'} on ${new Date(date).toLocaleDateString()}.\n\n\nRegards,\nArunachala hitech Engineering College`;
+
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://web.whatsapp.com/send?phone=91${phone}&text=${encodedMessage}`, '_blank');
+  };
 
   return (
     <div className="space-y-6">
@@ -337,14 +352,16 @@ export default function AttendancePage() {
                             >
                               <XIcon size={16} />
                             </button>
-                            {status === 'absent' && (
-                              <a
-                                href={`sms:${student.parentPhoneNumber || student.phoneNumber}?body=${encodeURIComponent('your son will did not come to college why?')}`}
-                                className="p-2 ml-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
-                                title="Message Parent"
-                              >
-                                <MessageCircle size={16} />
-                              </a>
+                            {status && (
+                              <>
+                                <button
+                                  onClick={() => sendWhatsAppMessage(student, status, selectedDate)}
+                                  className="p-2 ml-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
+                                  title="Message Parent via WhatsApp"
+                                >
+                                  <MessageCircle size={16} />
+                                </button>
+                              </>
                             )}
                           </div>
                         </td>

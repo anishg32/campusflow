@@ -7,6 +7,7 @@ import { LayoutDashboard, Users, Building2, ClipboardCheck, Settings, LogOut, Gr
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationBell } from '@/components/NotificationBell';
 import Image from 'next/image';
 
 const navItems = [
@@ -133,6 +134,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           
           <div className="flex items-center gap-4">
             <ThemeToggle />
+            <NotificationBell />
             <div className="text-right hidden sm:block">
               <p className="text-sm font-bold text-foreground">{user.name}</p>
               <p className="text-xs text-foreground/50 capitalize">{user.role || 'Teacher'}</p>

@@ -24,7 +24,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email.trim(), password);
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       setError(apiErr.message || 'Login failed. Please try again.');
