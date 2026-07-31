@@ -16,6 +16,7 @@ interface Student {
   _id: string;
   name: string;
   rollNumber: string;
+  registerNumber?: string;
   phoneNumber: string;
   email?: string;
   department: Department;
@@ -49,6 +50,7 @@ export default function StudentsPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [name, setName] = useState('');
   const [rollNumber, setRollNumber] = useState('');
+  const [registerNumber, setRegisterNumber] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [department, setDepartment] = useState('');
@@ -73,15 +75,25 @@ export default function StudentsPage() {
   const [studentFees, setStudentFees] = useState<any[]>([]);
   const [studentMarks, setStudentMarks] = useState<any[]>([]);
 
-  const fetchStudents = async () => {
+  const [pageNumber, setPageNumber] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchStudents = async (page = 1, append = false) => {
     try {
-      let path = '/students?';
+      let path = `/students?page=${page}&limit=50&`;
       if (filterDept) path += `department=${filterDept}&`;
       if (filterYear) path += `year=${filterYear}&`;
       if (search) path += `search=${search}&`;
 
-      const data = await apiGet<Student[]>(path);
-      setStudents(data);
+      const data = await apiGet<{students: Student[], total: number, page: number, totalPages: number}>(path);
+      
+      if (append) {
+        setStudents(prev => [...prev, ...data.students]);
+      } else {
+        setStudents(data.students);
+      }
+      setTotalPages(data.totalPages);
+      setPageNumber(data.page);
     } catch (err) {
       console.error('Failed to fetch students:', err);
     } finally {
@@ -106,7 +118,7 @@ export default function StudentsPage() {
     if (user?.role === 'student') return;
     setLoading(true);
     const timer = setTimeout(() => {
-      fetchStudents();
+      fetchStudents(1, false);
       setSelectedStudentIds([]); // Clear selection when filters change
     }, 300);
     return () => clearTimeout(timer);
@@ -145,6 +157,7 @@ export default function StudentsPage() {
   const resetForm = () => {
     setName('');
     setRollNumber('');
+    setRegisterNumber('');
     setPhoneNumber('');
     setEmail('');
     setDepartment('');
@@ -167,6 +180,7 @@ export default function StudentsPage() {
     setEditingStudent(student);
     setName(student.name);
     setRollNumber(student.rollNumber);
+    setRegisterNumber(student.registerNumber || '');
     setPhoneNumber(student.phoneNumber);
     setEmail(student.email || '');
     setDepartment(student.department._id);
@@ -186,7 +200,7 @@ export default function StudentsPage() {
     setFormLoading(true);
 
     try {
-      const payload = { name, rollNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth };
+      const payload = { name, rollNumber, registerNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth };
       
       if (editingStudent) {
         await apiPut(`/students/${editingStudent._id}`, payload);
@@ -293,7 +307,7 @@ export default function StudentsPage() {
 
               <form onSubmit={handleVerifyPrivacy} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Roll Number</label>
+                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Register Number</label>
                   <input
                     type="text"
                     required
@@ -380,7 +394,7 @@ export default function StudentsPage() {
               <p className="font-semibold text-lg">{myProfile?.name}</p>
             </div>
             <div>
-              <p className="text-foreground/50 text-xs font-medium uppercase tracking-wider mb-1">Roll Number</p>
+              <p className="text-foreground/50 text-xs font-medium uppercase tracking-wider mb-1">Register Number</p>
               <p className="font-mono font-medium text-lg text-primary">{myProfile?.rollNumber}</p>
             </div>
             <div>
@@ -532,7 +546,7 @@ export default function StudentsPage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
           <input
             type="text"
-            placeholder="Search by name, roll number, or phone..."
+            placeholder="Search by name, register number, or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-sm rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
@@ -647,6 +661,18 @@ export default function StudentsPage() {
                 ))}
               </tbody>
             </table>
+            
+            {pageNumber < totalPages && (
+              <div className="flex justify-center mt-6 mb-4">
+                <button
+                  onClick={() => fetchStudents(pageNumber + 1, true)}
+                  disabled={loading}
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10 text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Loading...' : 'Load More'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -697,14 +723,14 @@ export default function StudentsPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1.5 text-foreground/80">Roll Number *</label>
+                      <label className="block text-sm font-medium mb-1.5 text-foreground/80">Register Number *</label>
                       <input
                         type="text"
                         required
                         value={rollNumber}
                         onChange={(e) => setRollNumber(e.target.value)}
                         className="w-full px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                        placeholder="e.g. CS2024001"
+                        placeholder="e.g. 111822104001"
                       />
                     </div>
                     <div>

@@ -18,12 +18,14 @@ interface Mark {
   maxMarks: number;
   date: string;
   grade?: string;
+  createdBy?: string;
 }
 
 interface Department {
   _id: string;
   name: string;
   code: string;
+  subjectsConfig?: Record<string, Record<number, string[]>>;
 }
 
 interface Student {
@@ -32,23 +34,25 @@ interface Student {
   rollNumber: string;
   department?: { _id: string; name: string; code: string };
   year: number;
+  phoneNumber?: string;
+  parentPhoneNumber?: string;
 }
 
 const semesterSubjects: Record<string, Record<number, string[]>> = {
   '2021': {
-    1: ['Induction Programme', 'Professional English - I', 'Matrices and Calculus', 'Engineering Physics', 'Engineering Chemistry', 'Problem Solving and Python Programming', 'Heritage of Tamils'],
+    1: ['Professional English - I', 'Matrices and Calculus', 'Engineering Physics', 'Engineering Chemistry', 'Problem Solving and Python Programming', 'Heritage of Tamils'],
     2: ['Professional English - II', 'Statistics and Numerical Methods', 'Physics for Information Science', 'Basic Electrical and Electronics Engineering', 'Engineering Graphics', 'Programming in C', 'Tamils and Technology'],
     3: ['Discrete Mathematics', 'Digital Principles and Computer Organization', 'Foundations of Data Science', 'Data Structures', 'Object Oriented Programming'],
     4: ['Theory of Computation', 'Artificial Intelligence and Machine Learning', 'Database Management Systems', 'Algorithms', 'Introduction to Operating Systems', 'Environmental Sciences and Sustainability'],
-    5: ['Computer Networks', 'Compiler Design', 'Cryptography and Cyber Security', 'Distributed Computing', 'Professional Elective I', 'Professional Elective II', 'Mandatory Course-I'],
+    5: ['Computer Networks', 'Compiler Design', 'Cryptography and Cyber Security', 'Distributed Computing', 'Software Defined Networks', 'Cloud Computing'],
     6: ['Object Oriented Software Engineering', 'Embedded Systems and IoT', 'Open Elective - I', 'Professional Elective III', 'Professional Elective IV', 'Professional Elective V', 'Professional Elective VI', 'Mandatory Course-II'],
     7: ['Human Values and Ethics', 'Total Quality Management', 'Industrial Management', 'Project Report Writing', 'Summer Internship'],
     8: ['Project Work/Internship']
   },
   '2025': {
-    1: ['Induction Programme', 'Professional English - I', 'Matrices and Calculus', 'Engineering Physics', 'Engineering Chemistry', 'Problem Solving and Python Programming', 'Heritage of Tamils'],
+    1: ['Professional English - I', 'Matrices and Calculus', 'Engineering Physics', 'Engineering Chemistry', 'Problem Solving and Python Programming', 'Heritage of Tamils'],
     2: ['Professional English - II', 'Statistics and Numerical Methods', 'Physics for Information Science', 'Basic Electrical and Electronics Engineering', 'Engineering Graphics', 'Programming in C', 'Tamils and Technology'],
-    3: ['Discrete Mathematics', 'Digital Principles and Computer Organization', 'Foundations of Data Science', 'Data Structures', 'Object Oriented Programming'],
+    3: ['Discrete Mathematics', 'Operating Systems', 'Object Oriented Software Engineering', 'Data Structures', 'Java Programming', 'English Communication Skills Lab', 'Skill Development Course-I'],
     4: ['Theory of Computation', 'Artificial Intelligence and Machine Learning', 'Database Management Systems', 'Algorithms', 'Introduction to Operating Systems', 'Environmental Sciences and Sustainability'],
     5: ['Computer Networks', 'Compiler Design', 'Cryptography and Cyber Security', 'Distributed Computing', 'Professional Elective I', 'Professional Elective II', 'Mandatory Course-I'],
     6: ['Object Oriented Software Engineering', 'Embedded Systems and IoT', 'Open Elective - I', 'Professional Elective III', 'Professional Elective IV', 'Professional Elective V', 'Professional Elective VI', 'Mandatory Course-II'],
@@ -68,6 +72,7 @@ export default function MarksPage() {
   const [filterDept, setFilterDept] = useState('');
   const [filterYear, setFilterYear] = useState('');
   const [filterSemester, setFilterSemester] = useState('');
+  const [myEntriesOnly, setMyEntriesOnly] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<'single' | 'bulk-subjects' | 'bulk-students'>('single');
@@ -80,10 +85,11 @@ export default function MarksPage() {
   const [reportFilterDept, setReportFilterDept] = useState('');
   const [reportFilterYear, setReportFilterYear] = useState('');
   const [selectedReportStudent, setSelectedReportStudent] = useState('');
-  const reportStudentObj = students.find(s => s._id === selectedReportStudent);
+  const safeStudents = Array.isArray(students) ? students : [];
+  const reportStudentObj = safeStudents.find(s => s._id === selectedReportStudent);
   const reportStudentMarks = marks.filter(m => (m.student?._id || m.student) === selectedReportStudent);
   
-  const filteredReportStudents = students.filter(s => {
+  const filteredReportStudents = safeStudents.filter(s => {
     if (reportFilterDept && ((s.department as any)?._id || s.department) !== reportFilterDept) return false;
     if (reportFilterYear && s.year !== Number(reportFilterYear)) return false;
     return true;
@@ -91,6 +97,7 @@ export default function MarksPage() {
 
   const [formData, setFormData] = useState({
     regulation: '2021',
+    year: '',
     student: '',
     department: '',
     semester: '1',
@@ -104,7 +111,7 @@ export default function MarksPage() {
     date: new Date().toISOString().split('T')[0],
   });
 
-  const filteredBulkStudents = students.filter(s => {
+  const filteredBulkStudents = safeStudents.filter(s => {
     if (formData.department && ((s.department as any)?._id || s.department) !== formData.department) return false;
     if (formData.semester && s.year !== Math.ceil(Number(formData.semester) / 2)) return false;
     return true;
@@ -112,17 +119,118 @@ export default function MarksPage() {
   
   const { user } = useAuth();
 
+  const [sessionSubjects, setSessionSubjects] = useState(semesterSubjects);
+  const sessionSubjectsRef = useRef(sessionSubjects);
+
+  useEffect(() => {
+    sessionSubjectsRef.current = sessionSubjects;
+  }, [sessionSubjects]);
+
+  const updateDepartmentSubjects = async (newSubjects: any) => {
+    if (!formData.department) return;
+    try {
+      await apiPut(`/departments/${formData.department}`, {
+        subjectsConfig: newSubjects
+      });
+      setDepartments(prev => prev.map(d => 
+        d._id === formData.department ? { ...d, subjectsConfig: newSubjects } : d
+      ));
+    } catch (err) {
+      console.error('Failed to save subjects configuration', err);
+    }
+  };
+
+  useEffect(() => {
+    if (formData.department) {
+      const dept = departments.find(d => d._id === formData.department);
+      if (dept && dept.subjectsConfig && Object.keys(dept.subjectsConfig).length > 0) {
+        const merged = JSON.parse(JSON.stringify(semesterSubjects));
+        for (const reg in dept.subjectsConfig) {
+          if (!merged[reg]) merged[reg] = {};
+          for (const sem in dept.subjectsConfig[reg]) {
+            merged[reg][sem] = [...dept.subjectsConfig[reg][sem]];
+          }
+        }
+        setSessionSubjects(merged);
+      } else {
+        setSessionSubjects(JSON.parse(JSON.stringify(semesterSubjects)));
+      }
+    } else {
+      setSessionSubjects(JSON.parse(JSON.stringify(semesterSubjects)));
+    }
+  }, [formData.department, departments]);
+
+  const handleSubjectNameChange = (index: number, newName: string) => {
+    setSessionSubjects(prev => {
+      const reg = formData.regulation;
+      const sem = Number(formData.semester);
+      const updatedList = [...(prev[reg]?.[sem] || [])];
+      const oldName = updatedList[index];
+      updatedList[index] = newName;
+      
+      if (oldName !== newName) {
+        setBulkMarks(marksPrev => {
+          const newMarks = { ...marksPrev };
+          if (newMarks[oldName]) {
+            newMarks[newName] = newMarks[oldName];
+            delete newMarks[oldName];
+          }
+          return newMarks;
+        });
+      }
+      return { ...prev, [reg]: { ...prev[reg], [sem]: updatedList } };
+    });
+  };
+
+  const handleSubjectNameBlur = () => {
+    updateDepartmentSubjects(sessionSubjectsRef.current);
+  };
+
+  const removeSubject = (index: number) => {
+    if (!window.confirm("Are you sure you want to permanently delete this subject from this department's syllabus?")) return;
+    
+    setSessionSubjects(prev => {
+      const reg = formData.regulation;
+      const sem = Number(formData.semester);
+      const updatedList = [...(prev[reg]?.[sem] || [])];
+      const name = updatedList[index];
+      updatedList.splice(index, 1);
+      
+      setBulkMarks(marksPrev => {
+        const newMarks = { ...marksPrev };
+        delete newMarks[name];
+        return newMarks;
+      });
+      const newState = { ...prev, [reg]: { ...prev[reg], [sem]: updatedList } };
+      updateDepartmentSubjects(newState);
+      return newState;
+    });
+  };
+
+  const addSubject = () => {
+    setSessionSubjects(prev => {
+      const reg = formData.regulation;
+      const sem = Number(formData.semester);
+      const updatedList = [...(prev[reg]?.[sem] || [])];
+      updatedList.push(`New Subject ${updatedList.length + 1}`);
+      const newState = { ...prev, [reg]: { ...prev[reg], [sem]: updatedList } };
+      updateDepartmentSubjects(newState);
+      return newState;
+    });
+  };
+
+
   const fetchData = async () => {
     try {
       setLoading(true);
       const [marksRes, deptsRes, studentsRes] = await Promise.all([
         apiGet<Mark[]>('/marks'),
         apiGet<Department[]>('/departments'),
-        apiGet<Student[]>('/students')
+        apiGet<any>('/students?limit=10000')
       ]);
       setMarks(marksRes);
       setDepartments(deptsRes);
-      setStudents(studentsRes);
+      setStudents(Array.isArray(studentsRes?.students) ? studentsRes.students : (Array.isArray(studentsRes) ? studentsRes : []));
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -178,7 +286,7 @@ export default function MarksPage() {
     try {
       if (entryMode === 'bulk-subjects' && !editMark) {
         const payloadArray = [];
-        const subjects = semesterSubjects[formData.regulation]?.[Number(formData.semester)] || [];
+        const subjects = sessionSubjects[formData.regulation]?.[Number(formData.semester)] || [];
         for (const subject of subjects) {
           const b = bulkMarks[subject];
           if (!b) continue; // Skip if no data for this subject
@@ -305,6 +413,7 @@ export default function MarksPage() {
 
     setFormData({
       regulation: inferredRegulation,
+      year: mark.student.year?.toString() || '',
       student: mark.student._id,
       department: mark.department._id,
       semester: mark.semester?.toString() || '1',
@@ -323,6 +432,7 @@ export default function MarksPage() {
   const resetForm = () => {
     setFormData({
       regulation: '2021',
+      year: '',
       student: '',
       department: '',
       semester: '1',
@@ -379,6 +489,8 @@ export default function MarksPage() {
       if (m.examType !== filterExamType) return false;
     }
     if (filterExamType === 'Needs Improvement' && (m.examType === 'Semester Exam' ? m.grade !== 'U' : getPercentage(m) >= 50)) return false;
+    
+    if (myEntriesOnly && m.createdBy !== user?._id) return false;
 
     return true;
   });
@@ -553,15 +665,28 @@ export default function MarksPage() {
               )}
             </div>
             
-            <div className="relative w-full xl:max-w-xs shrink-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
-              <input 
+            <div className="flex items-center gap-4 shrink-0">
+              {user?.role === 'faculty' && (
+                <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={myEntriesOnly} 
+                    onChange={e => setMyEntriesOnly(e.target.checked)}
+                    className="rounded border-white/10 bg-black/20 text-primary focus:ring-primary/50"
+                  />
+                  My Entries
+                </label>
+              )}
+              <div className="relative w-full xl:max-w-xs shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                <input 
                 type="text" 
                 placeholder="Search name, roll or subject..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
               />
+            </div>
             </div>
           </div>
         </div>
@@ -687,54 +812,99 @@ export default function MarksPage() {
                       onClick={() => setEntryMode('single')}
                       className={`flex-1 px-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${entryMode === 'single' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
                     >
-                      Single
+                      Single Entry
                     </button>
                     <button
                       type="button"
-                      onClick={() => setEntryMode('bulk-subjects')}
-                      className={`flex-1 px-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${entryMode === 'bulk-subjects' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
+                      onClick={() => {
+                        setEntryMode('bulk-subjects');
+                        const sem = Number(formData.semester) || 1;
+                        setFormData(prev => ({
+                          ...prev, 
+                          regulation: '2021',
+                          subjectName: semesterSubjects['2021']?.[sem]?.[0] || ''
+                        }));
+                      }}
+                      className={`flex-1 px-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${entryMode === 'bulk-subjects' && formData.regulation === '2021' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
                     >
-                      Bulk Subjects
+                      Regulation 2021
                     </button>
                     <button
                       type="button"
-                      onClick={() => setEntryMode('bulk-students')}
-                      className={`flex-1 px-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${entryMode === 'bulk-students' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
+                      onClick={() => {
+                        setEntryMode('bulk-subjects');
+                        const sem = Number(formData.semester) || 1;
+                        setFormData(prev => ({
+                          ...prev, 
+                          regulation: '2025',
+                          subjectName: semesterSubjects['2025']?.[sem]?.[0] || ''
+                        }));
+                      }}
+                      className={`flex-1 px-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${entryMode === 'bulk-subjects' && formData.regulation === '2025' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
                     >
-                      Bulk Students
+                      Regulation 2025
                     </button>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/70 mb-1">Regulation</label>
-                    <select required value={formData.regulation} onChange={e => {
-                      const reg = e.target.value;
-                      const sem = Number(formData.semester) || 1;
-                      setFormData({...formData, regulation: reg, subjectName: semesterSubjects[reg]?.[sem]?.[0] || ''});
-                    }} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
-                      <option value="2021" className="bg-card">Regulation 2021</option>
-                      <option value="2025" className="bg-card">Regulation 2025</option>
-                    </select>
+                  <div className={entryMode !== 'bulk-students' ? "grid grid-cols-2 gap-4" : ""}>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground/70 mb-1">Department</label>
+                      <select required value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
+                        <option value="" className="bg-card">Select Dept</option>
+                        {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
+                      </select>
+                    </div>
+                    {entryMode !== 'bulk-students' && (
+                      <div>
+                        <label className="block text-sm font-medium text-foreground/70 mb-1">Year</label>
+                        <select value={formData.year || ''} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
+                          <option value="" className="bg-card">All Years</option>
+                          {[1, 2, 3, 4].map(y => <option key={y} value={y} className="bg-card">Year {y}</option>)}
+                        </select>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/70 mb-1">Department</label>
-                    <select required value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
-                      <option value="" className="bg-card">Select Dept</option>
-                      {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
-                    </select>
-                  </div>
-                </div>
                 {entryMode !== 'bulk-students' && (
                   <div>
                     <label className="block text-sm font-medium text-foreground/70 mb-1">Student</label>
                     <select required value={formData.student} onChange={e => setFormData({...formData, student: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
                       <option value="" className="bg-card">Select Student</option>
-                      {students.filter(s => !formData.department || (s.department as any) === formData.department || (s.department as any)?._id === formData.department).map(s => <option key={s._id} value={s._id} className="bg-card">{s.name} ({s.rollNumber})</option>)}
+                      {safeStudents.filter(s => {
+                        if (formData.department && (s.department as any) !== formData.department && (s.department as any)?._id !== formData.department) return false;
+                        if (formData.year && s.year !== Number(formData.year)) return false;
+                        return true;
+                      }).map(s => <option key={s._id} value={s._id} className="bg-card">{s.name} ({s.rollNumber})</option>)}
                     </select>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4">
+                  {entryMode !== 'bulk-subjects' && (
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-foreground/70 mb-1">Regulation Selection</label>
+                      <div className="flex bg-black/20 p-1 rounded-xl border border-white/10 w-full">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const sem = Number(formData.semester) || 1;
+                            setFormData({...formData, regulation: '2021', subjectName: semesterSubjects['2021']?.[sem]?.[0] || ''});
+                          }}
+                          className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${formData.regulation === '2021' ? 'bg-primary/80 text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
+                        >
+                          Regulation 2021
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const sem = Number(formData.semester) || 1;
+                            setFormData({...formData, regulation: '2025', subjectName: semesterSubjects['2025']?.[sem]?.[0] || ''});
+                          }}
+                          className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${formData.regulation === '2025' ? 'bg-primary/80 text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
+                        >
+                          Regulation 2025
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-medium text-foreground/70 mb-1">Semester</label>
                     <select required value={formData.semester} onChange={e => setFormData({...formData, semester: e.target.value, subjectName: semesterSubjects[formData.regulation]?.[Number(e.target.value)]?.[0] || ''})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
@@ -746,11 +916,22 @@ export default function MarksPage() {
                   {entryMode !== 'bulk-subjects' && (
                     <div>
                       <label className="block text-sm font-medium text-foreground/70 mb-1">Subject Name</label>
-                      <select required value={formData.subjectName} onChange={e => setFormData({...formData, subjectName: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50">
-                        {semesterSubjects[formData.regulation]?.[Number(formData.semester) || 1]?.map(sub => (
-                          <option key={sub} value={sub} className="bg-card">{sub}</option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          list="subject-list"
+                          value={formData.subjectName}
+                          onChange={e => setFormData({...formData, subjectName: e.target.value})}
+                          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50"
+                          placeholder="Select or type subject"
+                        />
+                        <datalist id="subject-list">
+                          {sessionSubjects[formData.regulation]?.[Number(formData.semester) || 1]?.map(sub => (
+                            <option key={sub} value={sub} />
+                          ))}
+                        </datalist>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -790,9 +971,20 @@ export default function MarksPage() {
                 </div>
                 {entryMode === 'bulk-subjects' ? (
                   <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-                    {semesterSubjects[formData.regulation]?.[Number(formData.semester)]?.map(subject => (
-                      <div key={subject} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-black/20 rounded-lg border border-white/10">
-                        <p className="text-sm font-medium flex-1 pr-2 leading-tight">{subject}</p>
+                    {(sessionSubjects[formData.regulation]?.[Number(formData.semester)] || []).map((subject, index) => (
+                      <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-black/20 rounded-lg border border-white/10">
+                        <div className="flex-1 flex items-center gap-2 pr-2">
+                          <input
+                            type="text"
+                            value={subject}
+                            onChange={e => handleSubjectNameChange(index, e.target.value)}
+                            onBlur={handleSubjectNameBlur}
+                            className="w-full bg-transparent border-b border-transparent hover:border-white/20 focus:border-primary focus:outline-none text-sm font-medium leading-tight px-1 py-0.5 transition-colors"
+                          />
+                          <button type="button" onClick={() => removeSubject(index)} className="text-red-400 hover:text-red-300 p-1 shrink-0">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                         <div className="w-full sm:w-[220px] grid grid-cols-2 gap-2 shrink-0">
                           {formData.examType.startsWith('Internal Exam') ? (
                             <>
@@ -828,6 +1020,9 @@ export default function MarksPage() {
                         </div>
                       </div>
                     ))}
+                    <button type="button" onClick={addSubject} className="w-full py-2 border border-dashed border-white/20 rounded-lg text-sm text-foreground/70 hover:text-foreground hover:bg-white/5 transition-colors flex items-center justify-center gap-2 mt-2">
+                      <Plus size={16} /> Add Subject
+                    </button>
                   </div>
                 ) : entryMode === 'bulk-students' ? (
                   <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
@@ -989,19 +1184,17 @@ export default function MarksPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {Array.from(new Set(reportStudentMarks.map(m => m.subjectName))).map(subject => (
+                        {Array.from(new Set(reportStudentMarks.map(m => m.subjectName))).sort().map(subject => (
                           <tr key={subject} className="hover:bg-white/5 transition-colors">
                             <td className="px-4 py-3 font-medium text-foreground">{subject}</td>
                             {Array.from(new Set(reportStudentMarks.map(m => m.examType))).sort().map(examType => {
-                              const m = reportStudentMarks.find(mark => mark.subjectName === subject && mark.examType === examType);
+                              const mark = reportStudentMarks.find(m => m.subjectName === subject && m.examType === examType);
                               return (
                                 <td key={examType} className="px-4 py-3">
-                                  {m ? (
-                                    m.examType === 'Semester Exam' ? (
-                                      <span className={m.grade !== 'U' ? 'text-green-400 font-semibold' : 'text-red-400 font-semibold'}>{m.grade}</span>
-                                    ) : (
-                                      <span className={getPercentage(m as any) >= 50 ? 'text-green-400' : 'text-red-400'}>{m.marksObtained}/{m.maxMarks}</span>
-                                    )
+                                  {mark ? (
+                                    mark.examType === 'Semester Exam' 
+                                      ? <span className="font-bold text-primary">{mark.grade}</span>
+                                      : <span>{mark.marksObtained} <span className="text-foreground/40">/ {mark.maxMarks}</span></span>
                                   ) : (
                                     <span className="text-foreground/30">-</span>
                                   )}
@@ -1010,6 +1203,30 @@ export default function MarksPage() {
                             })}
                           </tr>
                         ))}
+                        <tr className="hover:bg-white/5 transition-colors bg-white/5 font-bold">
+                          <td className="px-4 py-3 text-foreground">Total</td>
+                          {Array.from(new Set(reportStudentMarks.map(m => m.examType))).sort().map(examType => {
+                            const examMarks = reportStudentMarks.filter(mark => mark.examType === examType);
+                            let totalObtained = 0;
+                            let totalMax = 0;
+                            let isSemester = false;
+                            
+                            examMarks.forEach(m => {
+                               if (m.examType === 'Semester Exam') {
+                                  isSemester = true;
+                               } else {
+                                  totalObtained += (Number(m.marksObtained) || 0);
+                                  totalMax += (Number(m.maxMarks) || 0);
+                               }
+                            });
+                            
+                            return (
+                              <td key={examType} className="px-4 py-3 text-green-400">
+                                {isSemester ? '-' : `${totalObtained} / ${totalMax}`}
+                              </td>
+                            );
+                          })}
+                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -1100,12 +1317,24 @@ export default function MarksPage() {
                       </button>
                       <button 
                         onClick={() => {
-                          alert('Improvement Plan sent to student and parent successfully!');
+                          const mark = selectedPlanMark!;
+                          const studentObj = safeStudents.find(s => s._id === (mark.student?._id || mark.student));
+                          const phone = studentObj?.parentPhoneNumber || studentObj?.phoneNumber;
+                          if (!phone) {
+                            alert('No phone number available for this student.');
+                            return;
+                          }
+                          const percentage = getPercentage(mark);
+                          const isCritical = percentage < 30;
+                          const message = `Dear Parent,\n\nThis is to inform you regarding the academic performance of your ward ${mark.student?.name} (Roll No: ${mark.student?.rollNumber}).\n\n📚 Subject: ${mark.subjectName}\n📝 Exam: ${mark.examType}\n📊 Marks: ${mark.marksObtained || 0}/${mark.maxMarks || 0}\n🏅 Grade: ${mark.grade || 'N/A'}\n\n🤝 We kindly request you to visit the college and meet the class teacher/HOD\n\nRegards,\nArunachala Hitech Engineering College`;
+                          const encodedMessage = encodeURIComponent(message);
+                          window.open(`https://web.whatsapp.com/send?phone=91${phone}&text=${encodedMessage}`, '_blank');
                           setSelectedPlanMark(null);
                         }}
-                        className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+                        className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
                       >
-                        <Bell className="w-4 h-4" /> Send Plan to Student
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        Send via WhatsApp
                       </button>
                     </div>
                   </div>

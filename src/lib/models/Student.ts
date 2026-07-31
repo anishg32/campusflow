@@ -3,6 +3,7 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 export interface IStudent extends Document {
   name: string;
   rollNumber: string;
+  registerNumber?: string;
   phoneNumber: string;
   email?: string;
   department: mongoose.Types.ObjectId;
@@ -24,6 +25,9 @@ const studentSchema = new Schema<IStudent>(
       type: String,
       required: true,
       unique: true,
+    },
+    registerNumber: {
+      type: String,
     },
     phoneNumber: {
       type: String,

@@ -41,7 +41,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
     }
     
     const error: ApiError = {
-      message: data.message || 'Unauthorized',
+      message: data.error || data.message || 'Unauthorized',
       status: 401,
     };
     throw error;
@@ -50,7 +50,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
   if (!response.ok) {
     const error: ApiError = {
-      message: data.message || 'Something went wrong',
+      message: data.error || data.message || 'Something went wrong',
       status: response.status,
     };
     throw error;

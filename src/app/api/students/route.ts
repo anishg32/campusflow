@@ -45,11 +45,19 @@ export async function GET(req: NextRequest) {
       delete filter.$or;
     }
 
+    const limit = Number(searchParams.get('limit')) || 50;
+    const page = Number(searchParams.get('page')) || 1;
+    const skip = (page - 1) * limit;
+
     const students = await Student.find(filter)
       .populate('department', 'name code')
-      .sort({ name: 1 });
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limit);
 
-    return NextResponse.json(students);
+    const total = await Student.countDocuments(filter);
+
+    return NextResponse.json({ students, total, page, totalPages: Math.ceil(total / limit) });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
@@ -60,11 +68,11 @@ export async function POST(req: NextRequest) {
     await verifyAuth(req);
     await connectDB();
 
-    const { name, rollNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth } = await req.json();
+    const { name, rollNumber, registerNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth } = await req.json();
 
     const existing = await Student.findOne({ rollNumber });
     if (existing) {
-      return NextResponse.json({ message: 'A student with this roll number already exists' }, { status: 400 });
+      return NextResponse.json({ message: 'A student with this register number already exists' }, { status: 400 });
     }
 
     const dept = await Department.findById(department);
@@ -75,6 +83,7 @@ export async function POST(req: NextRequest) {
     const student = await Student.create({
       name,
       rollNumber,
+      registerNumber,
       phoneNumber,
       email,
       department,

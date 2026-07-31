@@ -5,6 +5,7 @@ export interface IDepartment extends Document {
   code: string;
   description?: string;
   hod?: mongoose.Types.ObjectId;
+  subjectsConfig?: Record<string, Record<number, string[]>>;
 }
 
 const departmentSchema = new Schema<IDepartment>(
@@ -25,6 +26,10 @@ const departmentSchema = new Schema<IDepartment>(
     hod: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
+    },
+    subjectsConfig: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
   },
   {

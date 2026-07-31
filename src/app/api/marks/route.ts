@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
     
     // Support bulk upload if body is array
     if (Array.isArray(body)) {
-      const marks = await Mark.insertMany(body);
+      const marksData = body.map(m => ({ ...m, createdBy: session.userId }));
+      const marks = await Mark.insertMany(marksData);
       return NextResponse.json(marks, { status: 201 });
     }
     
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
       assignmentMarks: assignmentMarks ? Number(assignmentMarks) : undefined,
       internalExamMarks: internalExamMarks ? Number(internalExamMarks) : undefined,
       date: date ? new Date(date) : new Date(),
+      createdBy: session.userId,
     });
     
     return NextResponse.json(mark, { status: 201 });

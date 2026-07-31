@@ -29,6 +29,7 @@ export interface IMark extends Document {
   internalExamMarks?: number;
   semester: number;
   grade?: string;
+  createdBy?: mongoose.Types.ObjectId;
 }
 
 const markSchema = new Schema<IMark>(
@@ -85,6 +86,10 @@ const markSchema = new Schema<IMark>(
     grade: {
       type: String,
       enum: ['O', 'A+', 'A', 'B+', 'B', 'C', 'U'],
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     }
   },
   {

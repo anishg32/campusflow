@@ -13,6 +13,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [role, setRole] = useState('faculty');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export default function Register() {
     setSuccess('');
     setLoading(true);
     try {
-      await register(name, email, password, phoneNumber);
+      await register(name, email, password, role, phoneNumber);
       setSuccess('Account created! Redirecting to login...');
     } catch (err: unknown) {
       const apiErr = err as ApiError;
@@ -64,7 +65,7 @@ export default function Register() {
               Join the next generation of education management.
             </h1>
             <p className="text-lg text-foreground/60 leading-relaxed mb-8">
-              Create your faculty account to access attendance tracking, department management, and real-time student analytics.
+              Create your account to access attendance tracking, department management, and real-time student analytics.
             </p>
             
             <div className="flex items-center gap-4 text-foreground/50 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md w-fit">
@@ -193,6 +194,21 @@ export default function Register() {
                   className="w-full pl-11 pr-4 py-3.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-foreground/30 shadow-sm"
                   placeholder="Create a strong password"
                 />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground/80">Account Type</label>
+              <div className="relative group">
+                <select 
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
+                >
+                  <option value="faculty">Faculty</option>
+                  <option value="admin">Administrator</option>
+                  <option value="student">Student</option>
+                </select>
               </div>
             </div>
 

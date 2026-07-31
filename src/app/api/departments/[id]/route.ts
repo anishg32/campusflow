@@ -54,3 +54,34 @@ export async function DELETE(
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await verifyAuth(req);
+    await connectDB();
+    const resolvedParams = await params;
+
+    const department = await Department.findById(resolvedParams.id);
+    if (!department) {
+      return NextResponse.json({ message: 'Department not found' }, { status: 404 });
+    }
+
+    const body = await req.json();
+    if (body.subjectsConfig !== undefined) {
+      department.subjectsConfig = body.subjectsConfig;
+      department.markModified('subjectsConfig');
+    }
+    if (body.name) department.name = body.name;
+    if (body.code) department.code = body.code;
+    if (body.description !== undefined) department.description = body.description;
+
+    await department.save();
+
+    return NextResponse.json(department);
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 500 });
+  }
+}

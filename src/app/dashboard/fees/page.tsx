@@ -59,11 +59,11 @@ export default function FeesPage() {
       const [feesRes, deptsRes, studentsRes] = await Promise.all([
         apiGet<Fee[]>('/fees'),
         apiGet<Department[]>('/departments'),
-        apiGet<Student[]>('/students')
+        apiGet<any>('/students?limit=10000')
       ]);
       setFees(feesRes);
       setDepartments(deptsRes);
-      setStudents(studentsRes);
+      setStudents(studentsRes.students || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {

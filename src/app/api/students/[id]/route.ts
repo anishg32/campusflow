@@ -31,7 +31,7 @@ export async function PUT(
     await connectDB();
     const resolvedParams = await params;
 
-    const { name, rollNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth } = await req.json();
+    const { name, rollNumber, registerNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth } = await req.json();
 
     const student = await Student.findById(resolvedParams.id);
     if (!student) {
@@ -41,12 +41,13 @@ export async function PUT(
     if (rollNumber && rollNumber !== student.rollNumber) {
       const dup = await Student.findOne({ rollNumber });
       if (dup) {
-        return NextResponse.json({ message: 'A student with this roll number already exists' }, { status: 400 });
+        return NextResponse.json({ message: 'A student with this register number already exists' }, { status: 400 });
       }
     }
 
     if (name) student.name = name;
     if (rollNumber) student.rollNumber = rollNumber;
+    if (registerNumber !== undefined) student.registerNumber = registerNumber;
     if (phoneNumber) student.phoneNumber = phoneNumber;
     if (email !== undefined) student.email = email;
     if (department) student.department = department;

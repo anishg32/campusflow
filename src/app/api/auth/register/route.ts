@@ -6,7 +6,7 @@ import { generateToken } from '@/lib/auth';
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
-    const { name, email, password, phoneNumber } = await req.json();
+    const { name, email, password, phoneNumber, role } = await req.json();
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       email,
       password,
       phoneNumber,
-      role: Role.FACULTY,
+      role: Object.values(Role).includes(role as Role) ? role : Role.FACULTY,
     });
 
     if (user) {
