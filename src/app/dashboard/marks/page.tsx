@@ -632,13 +632,13 @@ export default function MarksPage() {
 
       {/* List */}
       <div className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
-        <div className="p-6 border-b border-white/10 flex flex-col gap-4">
+        <div className="p-4 lg:p-6 border-b border-white/10 flex flex-col gap-4">
           <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 w-full">
-            <div className="flex flex-wrap items-center gap-4 flex-1 w-full">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 flex-1 w-full">
               <select
                 value={filterExamType}
                 onChange={(e) => setFilterExamType(e.target.value)}
-                className="bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 flex-1 sm:flex-none min-w-[160px]"
+                className="bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 w-full sm:w-auto min-w-[150px]"
               >
                 {['All', 'Class Test 1', 'Class Test 2', 'Class Test 3', 'Class Test 4', 'Internal Exam 1', 'Internal Exam 2', 'Internal Exam 3', 'Internal Exam 4', 'Revision Exam 1', 'Revision Exam 2', 'Revision Exam 3', 'Semester Exam', 'Needs Improvement'].map(tab => (
                   <option key={tab} value={tab} className="bg-card">{tab}</option>
@@ -646,19 +646,19 @@ export default function MarksPage() {
               </select>
 
               {(user?.role as string) !== 'student' && (
-                <>
+                <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                   <select
                     value={filterDept}
                     onChange={(e) => setFilterDept(e.target.value)}
-                    className="bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 flex-1 sm:flex-none min-w-[140px]"
+                    className="flex-1 sm:flex-none bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
                   >
-                    <option value="" className="bg-card">All Departments</option>
+                    <option value="" className="bg-card">All Depts</option>
                     {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
                   </select>
                   <select
                     value={filterYear}
                     onChange={(e) => setFilterYear(e.target.value)}
-                    className="bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 flex-1 sm:flex-none min-w-[140px]"
+                    className="flex-1 sm:flex-none bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
                   >
                     <option value="" className="bg-card">All Years</option>
                     <option value="1" className="bg-card">1st Year</option>
@@ -669,44 +669,134 @@ export default function MarksPage() {
                   <select
                     value={filterSemester}
                     onChange={(e) => setFilterSemester(e.target.value)}
-                    className="bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 flex-1 sm:flex-none min-w-[140px]"
+                    className="flex-1 sm:flex-none bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
                   >
-                    <option value="" className="bg-card">All Semesters</option>
+                    <option value="" className="bg-card">All Sems</option>
                     {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                      <option key={sem} value={sem} className="bg-card">Semester {sem}</option>
+                      <option key={sem} value={sem} className="bg-card">Sem {sem}</option>
                     ))}
                   </select>
-                </>
+                </div>
               )}
             </div>
             
-            <div className="flex items-center gap-4 shrink-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto shrink-0">
               {user?.role === 'faculty' && (
-                <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer p-2 bg-black/20 rounded-xl border border-white/10 justify-center">
                   <input 
                     type="checkbox" 
                     checked={myEntriesOnly} 
                     onChange={e => setMyEntriesOnly(e.target.checked)}
-                    className="rounded border-white/10 bg-black/20 text-primary focus:ring-primary/50"
+                    className="rounded border-white/10 bg-black/20 text-primary focus:ring-primary/50 w-4 h-4"
                   />
                   My Entries
                 </label>
               )}
-              <div className="relative w-full xl:max-w-xs shrink-0">
+              <div className="relative w-full sm:max-w-xs shrink-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
                 <input 
-                type="text" 
-                placeholder="Search name, roll or subject..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-              />
-            </div>
+                  type="text" 
+                  placeholder="Search name, roll or subject..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-black/20 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/50"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* ===== MOBILE CARD VIEW ===== */}
+        <div className="lg:hidden p-4 space-y-3">
+          {loading ? (
+            <div className="flex justify-center py-8"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>
+          ) : filteredMarks.length === 0 ? (
+            <div className="text-center py-8 text-foreground/50 text-sm">No marks found.</div>
+          ) : filteredMarks.map((mark) => {
+            const percentage = getPercentage(mark);
+            const isPass = mark.examType === 'Semester Exam' ? mark.grade !== 'U' : percentage >= 50;
+
+            return (
+              <div key={mark._id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-semibold text-foreground text-sm">{mark.subjectName}</h4>
+                    <p className="text-xs text-foreground/50 mt-0.5">{mark.student?.name || 'Unknown'} • {mark.student?.rollNumber || '-'}</p>
+                  </div>
+                  <span className="px-2 py-1 bg-white/5 text-foreground/80 rounded-md text-[10px] font-medium border border-white/10">
+                    {mark.examType}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between text-xs text-foreground/50 mb-3">
+                  <span>{mark.department?.code || '-'} • Sem {mark.semester || 1}</span>
+                  <span>{new Date(mark.date).toLocaleDateString()}</span>
+                </div>
+
+                <div className="flex justify-between items-center py-2 border-t border-white/10 mt-3 pt-3">
+                  <div>
+                    <p className="text-[10px] text-foreground/50 mb-1">Marks</p>
+                    <div className="font-medium">
+                      {mark.examType === 'Semester Exam' ? (
+                        <span className={isPass ? 'text-green-400' : 'text-red-400'}>{mark.grade || '-'}</span>
+                      ) : (
+                        <>
+                          <span className={isPass ? 'text-green-400' : 'text-red-400'}>{mark.marksObtained}</span>
+                          <span className="text-foreground/40 text-xs"> / {mark.maxMarks}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <p className="text-[10px] text-foreground/50 mb-1">Percentage</p>
+                    {mark.examType === 'Semester Exam' ? (
+                      <span className="text-xs font-medium text-foreground/40">Grade based</span>
+                    ) : (
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="w-12 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${isPass ? 'bg-green-500' : 'bg-red-500'}`} 
+                            style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium">{percentage.toFixed(1)}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {(user?.role === 'admin' || user?.role === 'faculty') && (
+                  <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-white/10">
+                    {!isPass && (
+                      <button 
+                        onClick={() => setSelectedPlanMark(mark)}
+                        className="p-1.5 bg-yellow-500/10 text-yellow-500 rounded-lg"
+                      >
+                        <Lightbulb size={14} />
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => openEditModal(mark)}
+                      className="p-1.5 bg-white/10 text-foreground/70 rounded-lg"
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(mark._id)}
+                      className="p-1.5 bg-red-500/10 text-red-400 rounded-lg"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ===== DESKTOP TABLE VIEW ===== */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left text-sm text-foreground/70">
             <thead className="bg-black/20 text-foreground/50 border-b border-white/10">
               <tr>
