@@ -8,7 +8,7 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
-
+  turbopack: {},
   allowedDevOrigins: [
     'compiler-innocent-regression-pharmacology.trycloudflare.com',
     'skating-specialist-alarm-without.trycloudflare.com',

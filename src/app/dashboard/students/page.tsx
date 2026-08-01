@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Phone, Edit2, Trash2, X, UserPlus, Lock, GraduationCap, ClipboardCheck, CreditCard } from 'lucide-react';
+import { Search, Phone, Edit2, Trash2, X, UserPlus, Lock, GraduationCap, ClipboardCheck, CreditCard, Eye } from 'lucide-react';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
@@ -46,6 +46,11 @@ export default function StudentsPage() {
   // Admin form state
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  
+  // Admin view student state
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
+  const [viewLoading, setViewLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
   const [name, setName] = useState('');
@@ -253,6 +258,14 @@ export default function StudentsPage() {
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
     }
+  };
+
+  const openViewModal = async (student: Student) => {
+    setViewingStudent(student);
+    setViewLoading(true);
+    setShowViewModal(true);
+    await fetchStudentDashboardData(student._id);
+    setViewLoading(false);
   };
 
   const handleVerifyPrivacy = async (e: React.FormEvent) => {
@@ -505,177 +518,290 @@ export default function StudentsPage() {
 
   // Admin View
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Students</h1>
-          <p className="text-foreground/60 text-sm mt-1">Manage all student records in the system</p>
-        </div>
-        <div className="flex gap-2">
-          {selectedStudentIds.length > 0 && (
-            <>
-              <button
-                onClick={handleBulkDelete}
-                className="px-5 py-2.5 bg-red-500/10 text-red-500 rounded-lg font-medium hover:bg-red-500/20 transition-colors flex items-center gap-2 shadow-sm text-sm"
-              >
-                <Trash2 size={16} />
-                Delete Selected ({selectedStudentIds.length})
-              </button>
-              <button
-                onClick={() => setShowPromoteModal(true)}
-                className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2 shadow-sm text-sm"
-              >
-                <GraduationCap size={16} />
-                Promote Selected ({selectedStudentIds.length})
-              </button>
-            </>
-          )}
+    <div className="space-y-4 lg:space-y-6 max-w-7xl mx-auto pb-6">
+      {/* Header */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl lg:text-2xl font-bold tracking-tight">Students</h1>
+            <p className="text-foreground/60 text-xs lg:text-sm mt-0.5">Manage all student records</p>
+          </div>
           <button
             onClick={openAddForm}
-            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm text-sm"
+            className="px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 text-sm"
           >
             <UserPlus size={16} />
-            Add Student
+            <span className="hidden sm:inline">Add Student</span>
+            <span className="sm:hidden">Add</span>
           </button>
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row gap-4 shadow-sm">
-        <div className="flex-1 relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
-          <input
-            type="text"
-            placeholder="Search by name, register number, or phone..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-          />
-        </div>
-        <select
-          value={filterDept}
-          onChange={(e) => setFilterDept(e.target.value)}
-          className="px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-primary outline-none transition-all min-w-[200px]"
-        >
-          <option value="">All Departments</option>
-          {departments.map((dept) => (
-            <option key={dept._id} value={dept._id}>{dept.name}</option>
-          ))}
-        </select>
-        <select
-          value={filterYear}
-          onChange={(e) => setFilterYear(e.target.value)}
-          className="px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-primary outline-none transition-all min-w-[150px]"
-        >
-          <option value="">All Years</option>
-          <option value="1">1st Year</option>
-          <option value="2">2nd Year</option>
-          <option value="3">3rd Year</option>
-          <option value="4">4th Year</option>
-        </select>
-      </div>
-
-      {/* Students Table */}
-      <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="text-center py-16 text-foreground/40 text-sm">Loading students...</div>
-        ) : students.length === 0 ? (
-          <div className="text-center py-16">
-            <UserPlus className="mx-auto mb-4 opacity-20" size={40} />
-            <p className="text-foreground/50 font-medium">No students found</p>
-            <p className="text-foreground/40 text-sm mt-1">Add your first student to get started</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-foreground/[0.02]">
-                  <th className="w-12 px-6 py-3">
-                    <input type="checkbox" checked={students.length > 0 && selectedStudentIds.length === students.length} onChange={handleSelectAll} className="w-4 h-4 rounded border-border bg-background cursor-pointer accent-primary" />
-                  </th>
-                  <th className="text-left px-6 py-3 font-semibold text-foreground/70">Name</th>
-                  <th className="text-left px-6 py-3 font-semibold text-foreground/70">Roll No.</th>
-                  <th className="text-left px-6 py-3 font-semibold text-foreground/70">Phone</th>
-                  <th className="text-left px-6 py-3 font-semibold text-foreground/70">Department</th>
-                  <th className="text-left px-6 py-3 font-semibold text-foreground/70">Year</th>
-                  <th className="text-left px-6 py-3 font-semibold text-foreground/70">Section</th>
-                  <th className="text-right px-6 py-3 font-semibold text-foreground/70">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student, i) => (
-                  <motion.tr
-                    key={student._id}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.02 }}
-                    className="border-b border-border hover:bg-foreground/[0.02] transition-colors"
-                  >
-                    <td className="px-6 py-3">
-                      <input type="checkbox" checked={selectedStudentIds.includes(student._id)} onChange={() => handleSelectStudent(student._id)} className="w-4 h-4 rounded border-border bg-background cursor-pointer accent-primary" />
-                    </td>
-                    <td className="px-6 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                          {student.name ? student.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : 'S'}
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{student.name}</p>
-                          {student.email && <p className="text-xs text-foreground/50">{student.email}</p>}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-3 font-mono text-foreground/70">{student.rollNumber}</td>
-                    <td className="px-6 py-3">
-                      <span className="flex items-center gap-1.5 text-foreground/70">
-                        <Phone size={12} className="text-foreground/40" />
-                        {student.phoneNumber}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3">
-                      <span className="inline-flex items-center px-2 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-md">
-                        {student.department?.code || '—'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3 text-foreground/70">{student.year}</td>
-                    <td className="px-6 py-3 text-foreground/70">{student.section}</td>
-                    <td className="px-6 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => openEditForm(student)}
-                          className="p-1.5 rounded-md hover:bg-foreground/5 text-foreground/50 hover:text-primary transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(student._id)}
-                          className="p-1.5 rounded-md hover:bg-red-500/10 text-foreground/50 hover:text-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-            
-            {pageNumber < totalPages && (
-              <div className="flex justify-center mt-6 mb-4">
-                <button
-                  onClick={() => fetchStudents(pageNumber + 1, true)}
-                  disabled={loading}
-                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10 text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  {loading ? 'Loading...' : 'Load More'}
-                </button>
-              </div>
-            )}
+        {selectedStudentIds.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={handleBulkDelete}
+              className="px-4 py-2 bg-red-500/10 text-red-500 rounded-xl font-medium hover:bg-red-500/20 transition-colors flex items-center gap-2 shadow-sm text-xs"
+            >
+              <Trash2 size={14} />
+              Delete ({selectedStudentIds.length})
+            </button>
+            <button
+              onClick={() => setShowPromoteModal(true)}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2 shadow-sm text-xs"
+            >
+              <GraduationCap size={14} />
+              Promote ({selectedStudentIds.length})
+            </button>
           </div>
         )}
       </div>
+
+      {/* Filters */}
+      <div className="bg-card border border-border rounded-2xl p-3 lg:p-4 flex flex-col gap-3 shadow-sm">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
+          <input
+            type="text"
+            placeholder="Search name, register no, phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={filterDept}
+            onChange={(e) => setFilterDept(e.target.value)}
+            className="flex-1 px-3 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary outline-none transition-all"
+          >
+            <option value="">All Depts</option>
+            {departments.map((dept) => (
+              <option key={dept._id} value={dept._id}>{dept.code}</option>
+            ))}
+          </select>
+          <select
+            value={filterYear}
+            onChange={(e) => setFilterYear(e.target.value)}
+            className="flex-1 px-3 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary outline-none transition-all"
+          >
+            <option value="">All Years</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Students List */}
+      {loading ? (
+        <div className="text-center py-16 text-foreground/40 text-sm">
+          <div className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full mx-auto mb-3" />
+          Loading students...
+        </div>
+      ) : students.length === 0 ? (
+        <div className="text-center py-16 bg-card border border-border rounded-2xl">
+          <UserPlus className="mx-auto mb-4 opacity-20" size={40} />
+          <p className="text-foreground/50 font-medium">No students found</p>
+          <p className="text-foreground/40 text-sm mt-1">Add your first student to get started</p>
+        </div>
+      ) : (
+        <>
+          {/* ===== MOBILE CARD VIEW (shown on small screens) ===== */}
+          <div className="lg:hidden space-y-3">
+            {/* Select All on Mobile */}
+            <div className="flex items-center justify-between px-1">
+              <label className="flex items-center gap-2 text-sm text-foreground/60">
+                <input 
+                  type="checkbox" 
+                  checked={students.length > 0 && selectedStudentIds.length === students.length} 
+                  onChange={handleSelectAll} 
+                  className="w-4 h-4 rounded accent-primary" 
+                />
+                Select All
+              </label>
+              <span className="text-xs text-foreground/40">{students.length} students</span>
+            </div>
+
+            {students.map((student, i) => (
+              <motion.div
+                key={student._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03, duration: 0.3 }}
+                className="bg-card border border-border rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-transform"
+              >
+                <div className="flex items-start gap-3">
+                  {/* Checkbox */}
+                  <input 
+                    type="checkbox" 
+                    checked={selectedStudentIds.includes(student._id)} 
+                    onChange={() => handleSelectStudent(student._id)} 
+                    className="w-4 h-4 rounded accent-primary mt-1 shrink-0" 
+                  />
+                  
+                  {/* Avatar */}
+                  <div 
+                    className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center text-primary font-bold text-sm border border-primary/10 shrink-0 cursor-pointer"
+                    onClick={() => openViewModal(student)}
+                  >
+                    {student.name ? student.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : 'S'}
+                  </div>
+                  
+                  {/* Info - tap to view */}
+                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openViewModal(student)}>
+                    <p className="font-semibold text-foreground text-sm truncate">{student.name}</p>
+                    <p className="text-xs text-foreground/50 font-mono mt-0.5">{student.rollNumber}</p>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <span className="inline-flex items-center px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-lg">
+                        {student.department?.code || '—'}
+                      </span>
+                      <span className="text-[10px] text-foreground/40 font-medium">
+                        Year {student.year} • Sec {student.section}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <button
+                      onClick={() => openViewModal(student)}
+                      className="p-2 rounded-xl bg-blue-500/10 text-blue-500 transition-colors"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button
+                      onClick={() => openEditForm(student)}
+                      className="p-2 rounded-xl bg-foreground/5 text-foreground/50 transition-colors"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(student._id)}
+                      className="p-2 rounded-xl bg-red-500/5 text-red-400 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Phone row */}
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                  <Phone size={12} className="text-foreground/30" />
+                  <a href={`tel:${student.phoneNumber}`} className="text-xs text-foreground/60 font-medium">
+                    {student.phoneNumber}
+                  </a>
+                  {student.email && (
+                    <>
+                      <span className="text-foreground/20">|</span>
+                      <span className="text-xs text-foreground/40 truncate">{student.email}</span>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* ===== DESKTOP TABLE VIEW (hidden on small screens) ===== */}
+          <div className="hidden lg:block bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-foreground/[0.02]">
+                    <th className="w-12 px-6 py-3">
+                      <input type="checkbox" checked={students.length > 0 && selectedStudentIds.length === students.length} onChange={handleSelectAll} className="w-4 h-4 rounded border-border bg-background cursor-pointer accent-primary" />
+                    </th>
+                    <th className="text-left px-6 py-3 font-semibold text-foreground/70">Name</th>
+                    <th className="text-left px-6 py-3 font-semibold text-foreground/70">Roll No.</th>
+                    <th className="text-left px-6 py-3 font-semibold text-foreground/70">Phone</th>
+                    <th className="text-left px-6 py-3 font-semibold text-foreground/70">Department</th>
+                    <th className="text-left px-6 py-3 font-semibold text-foreground/70">Year</th>
+                    <th className="text-left px-6 py-3 font-semibold text-foreground/70">Section</th>
+                    <th className="text-right px-6 py-3 font-semibold text-foreground/70">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student, i) => (
+                    <motion.tr
+                      key={student._id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.02 }}
+                      className="border-b border-border hover:bg-foreground/[0.02] transition-colors"
+                    >
+                      <td className="px-6 py-3">
+                        <input type="checkbox" checked={selectedStudentIds.includes(student._id)} onChange={() => handleSelectStudent(student._id)} className="w-4 h-4 rounded border-border bg-background cursor-pointer accent-primary" />
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                            {student.name ? student.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : 'S'}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{student.name}</p>
+                            {student.email && <p className="text-xs text-foreground/50">{student.email}</p>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 font-mono text-foreground/70">{student.rollNumber}</td>
+                      <td className="px-6 py-3">
+                        <span className="flex items-center gap-1.5 text-foreground/70">
+                          <Phone size={12} className="text-foreground/40" />
+                          {student.phoneNumber}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="inline-flex items-center px-2 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-md">
+                          {student.department?.code || '—'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-foreground/70">{student.year}</td>
+                      <td className="px-6 py-3 text-foreground/70">{student.section}</td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => openViewModal(student)}
+                            className="p-1.5 rounded-md hover:bg-blue-500/10 text-foreground/50 hover:text-blue-500 transition-colors"
+                            title="View Details"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => openEditForm(student)}
+                            className="p-1.5 rounded-md hover:bg-foreground/5 text-foreground/50 hover:text-primary transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(student._id)}
+                            className="p-1.5 rounded-md hover:bg-red-500/10 text-foreground/50 hover:text-red-600 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Load More */}
+          {pageNumber < totalPages && (
+            <div className="flex justify-center pt-2 pb-4">
+              <button
+                onClick={() => fetchStudents(pageNumber + 1, true)}
+                disabled={loading}
+                className="px-6 py-2.5 bg-card hover:bg-foreground/5 text-foreground/70 rounded-xl border border-border text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Loading...' : 'Load More Students'}
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Add/Edit Modal */}
       <AnimatePresence>
@@ -926,6 +1052,189 @@ export default function StudentsPage() {
                 >
                   {promoteLoading ? 'Promoting...' : 'Confirm Promotion'}
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* View Details Modal — Full Screen on Mobile, Centered on Desktop */}
+      <AnimatePresence>
+        {showViewModal && viewingStudent && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-end lg:items-center justify-center bg-black/50 backdrop-blur-sm lg:p-10"
+            onClick={() => setShowViewModal(false)}
+          >
+            <motion.div
+              initial={{ y: '100%', opacity: 1 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 1 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-background w-full lg:max-w-6xl lg:rounded-2xl rounded-t-3xl shadow-2xl flex flex-col h-[95dvh] lg:h-[90vh] overflow-hidden border-t border-white/10 lg:border lg:border-border"
+            >
+              {/* Drag Handle (Mobile) */}
+              <div className="lg:hidden flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-foreground/20" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 lg:px-6 py-3 lg:py-4 border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    {viewingStudent.name ? viewingStudent.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : 'S'}
+                  </div>
+                  <div>
+                    <h2 className="text-base lg:text-lg font-bold leading-tight">{viewingStudent.name}</h2>
+                    <p className="text-xs text-primary font-mono">{viewingStudent.rollNumber}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowViewModal(false)} className="p-2 rounded-xl hover:bg-white/10 text-foreground/70 transition-colors bg-white/5">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto overscroll-contain">
+                {viewLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full" />
+                  </div>
+                ) : (
+                  <div className="p-4 lg:p-8 space-y-5 lg:space-y-8 pb-8">
+                    
+                    {/* Profile Info Grid */}
+                    <div className="bg-card border border-border rounded-2xl p-4 lg:p-6 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 relative z-10">
+                        <div>
+                          <p className="text-foreground/40 text-[10px] lg:text-xs font-medium uppercase tracking-wider mb-1">Department</p>
+                          <p className="font-semibold text-sm lg:text-base">{viewingStudent.department?.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-foreground/40 text-[10px] lg:text-xs font-medium uppercase tracking-wider mb-1">Year & Section</p>
+                          <p className="font-semibold text-sm lg:text-base">Year {viewingStudent.year} • {viewingStudent.section}</p>
+                        </div>
+                        <div>
+                          <p className="text-foreground/40 text-[10px] lg:text-xs font-medium uppercase tracking-wider mb-1">Phone</p>
+                          <a href={`tel:${viewingStudent.phoneNumber}`} className="font-semibold text-sm lg:text-base text-primary">{viewingStudent.phoneNumber}</a>
+                        </div>
+                        {viewingStudent.email && (
+                          <div>
+                            <p className="text-foreground/40 text-[10px] lg:text-xs font-medium uppercase tracking-wider mb-1">Email</p>
+                            <p className="font-medium text-sm truncate">{viewingStudent.email}</p>
+                          </div>
+                        )}
+                        {viewingStudent.parentName && (
+                          <div>
+                            <p className="text-foreground/40 text-[10px] lg:text-xs font-medium uppercase tracking-wider mb-1">Parent</p>
+                            <p className="font-medium text-sm">{viewingStudent.parentName}</p>
+                          </div>
+                        )}
+                        {viewingStudent.parentPhoneNumber && (
+                          <div>
+                            <p className="text-foreground/40 text-[10px] lg:text-xs font-medium uppercase tracking-wider mb-1">Parent Phone</p>
+                            <p className="font-medium text-sm">{viewingStudent.parentPhoneNumber}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Attendance */}
+                    <div className="bg-card border border-border rounded-2xl shadow-sm p-4 lg:p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-blue-500/10 text-blue-500 rounded-xl">
+                          <ClipboardCheck size={18} />
+                        </div>
+                        <h2 className="text-base lg:text-lg font-bold">Attendance</h2>
+                        <span className="ml-auto text-xs text-foreground/40 font-medium">{studentAttendance.length} records</span>
+                      </div>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                        {studentAttendance.length === 0 ? (
+                          <p className="text-foreground/50 text-sm text-center py-6">No attendance records.</p>
+                        ) : (
+                          studentAttendance.map((record: any) => (
+                            <div key={record._id} className="flex items-center justify-between p-3 rounded-xl bg-foreground/[0.02] border border-border/50">
+                              <span className="text-sm font-medium">{new Date(record.date).toLocaleDateString()}</span>
+                              <span className={`text-xs font-bold px-3 py-1 rounded-lg ${record.status === 'present' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                                {record.status?.toUpperCase() || 'UNKNOWN'}
+                              </span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Fees */}
+                    <div className="bg-card border border-border rounded-2xl shadow-sm p-4 lg:p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl">
+                          <CreditCard size={18} />
+                        </div>
+                        <h2 className="text-base lg:text-lg font-bold">Fee Details</h2>
+                        <span className="ml-auto text-xs text-foreground/40 font-medium">{studentFees.length} records</span>
+                      </div>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                        {studentFees.length === 0 ? (
+                          <p className="text-foreground/50 text-sm text-center py-6">No fee records found.</p>
+                        ) : (
+                          studentFees.map((fee: any) => (
+                            <div key={fee._id} className="flex flex-col p-3 rounded-xl bg-foreground/[0.02] border border-border/50">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm font-bold">{fee.title}</span>
+                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg ${
+                                  fee.status === 'Paid' ? 'bg-emerald-500/10 text-emerald-500' : 
+                                  fee.status === 'Partial' ? 'bg-amber-500/10 text-amber-500' : 
+                                  'bg-red-500/10 text-red-500'
+                                }`}>
+                                  {fee.status?.toUpperCase() || 'PENDING'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs text-foreground/60 bg-background/50 p-2 rounded-lg">
+                                <span>Total: ₹{fee.totalAmount}</span>
+                                <span className="font-semibold text-foreground">Paid: ₹{fee.paidAmount}</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Marks */}
+                    <div className="bg-card border border-border rounded-2xl shadow-sm p-4 lg:p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-purple-500/10 text-purple-500 rounded-xl">
+                          <GraduationCap size={18} />
+                        </div>
+                        <h2 className="text-base lg:text-lg font-bold">Marks & Grades</h2>
+                        <span className="ml-auto text-xs text-foreground/40 font-medium">{studentMarks.length} records</span>
+                      </div>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                        {studentMarks.length === 0 ? (
+                          <p className="text-foreground/50 text-sm text-center py-6">No marks recorded yet.</p>
+                        ) : (
+                          studentMarks.map((mark: any) => (
+                            <div key={mark._id} className="flex flex-col p-3 rounded-xl bg-foreground/[0.02] border border-border/50">
+                              <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-sm font-bold truncate flex-1 mr-2">{mark.subjectName}</span>
+                                <span className="text-[10px] uppercase font-bold px-2 py-1 rounded-md bg-primary/10 text-primary shrink-0">
+                                  {mark.examType}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs text-foreground/60">
+                                <span>Score: {mark.marksObtained} / {mark.maxMarks}</span>
+                                {mark.grade && <span className="font-bold text-foreground bg-background/50 px-2 py-0.5 rounded">Grade: {mark.grade}</span>}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
