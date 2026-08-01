@@ -294,54 +294,134 @@ export default function FeesPage() {
 
       {/* Fees List */}
       <div className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
-        <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex bg-black/20 p-1 rounded-xl border border-white/10 w-full sm:w-auto">
+        <div className="p-4 lg:p-6 border-b border-white/10 flex flex-col lg:flex-row gap-4">
+          <div className="flex bg-black/20 p-1 rounded-xl border border-white/10 w-full lg:w-auto overflow-x-auto shrink-0">
             {['All', 'Pending', 'Paid'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setFilterTab(tab as any)}
-                className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all ${filterTab === tab ? 'bg-primary text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
+                className={`flex-1 lg:flex-none px-4 lg:px-6 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterTab === tab ? 'bg-primary text-primary-foreground shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
               >
                 {tab}
               </button>
             ))}
           </div>
-          <div className="relative flex-1 max-w-md w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
-            <input 
-              type="text" 
-              placeholder="Search by student name, roll or invoice title..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-            />
+          
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+              <input 
+                type="text" 
+                placeholder="Search by name, roll or invoice..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-black/20 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+              />
+            </div>
+            {(user?.role as string) !== 'student' && (
+              <div className="flex gap-2 w-full sm:w-auto">
+                <select
+                  value={filterDept}
+                  onChange={(e) => setFilterDept(e.target.value)}
+                  className="flex-1 sm:flex-none bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                >
+                  <option value="" className="bg-card">All Depts</option>
+                  {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
+                </select>
+                <select
+                  value={filterYear}
+                  onChange={(e) => setFilterYear(e.target.value)}
+                  className="flex-1 sm:flex-none bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                >
+                  <option value="" className="bg-card">All Years</option>
+                  <option value="1" className="bg-card">1st Year</option>
+                  <option value="2" className="bg-card">2nd Year</option>
+                  <option value="3" className="bg-card">3rd Year</option>
+                  <option value="4" className="bg-card">4th Year</option>
+                </select>
+              </div>
+            )}
           </div>
-          {(user?.role as string) !== 'student' && (
-            <>
-              <select
-                value={filterDept}
-                onChange={(e) => setFilterDept(e.target.value)}
-                className="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-              >
-                <option value="" className="bg-card">All Departments</option>
-                {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
-              </select>
-              <select
-                value={filterYear}
-                onChange={(e) => setFilterYear(e.target.value)}
-                className="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-              >
-                <option value="" className="bg-card">All Years</option>
-                <option value="1" className="bg-card">1st Year</option>
-                <option value="2" className="bg-card">2nd Year</option>
-                <option value="3" className="bg-card">3rd Year</option>
-                <option value="4" className="bg-card">4th Year</option>
-              </select>
-            </>
-          )}
         </div>
 
-        <div className="overflow-x-auto">
+        {/* ===== MOBILE CARD VIEW ===== */}
+        <div className="lg:hidden p-4 space-y-3">
+          {loading ? (
+            <div className="flex justify-center py-8"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>
+          ) : filteredFees.length === 0 ? (
+            <div className="text-center py-8 text-foreground/50 text-sm">No invoices found.</div>
+          ) : filteredFees.map((fee) => (
+            <div key={fee._id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h4 className="font-semibold text-foreground text-sm">{fee.title}</h4>
+                  <p className="text-xs text-foreground/50 mt-0.5">{fee.student?.name || 'Unknown'} • {fee.student?.rollNumber || '-'}</p>
+                </div>
+                <span className={`px-2 py-1 rounded-md text-[10px] font-medium border ${
+                  fee.status === 'Paid' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                  fee.status === 'Partial' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 
+                  'bg-red-500/10 text-red-400 border-red-500/20'
+                }`}>
+                  {fee.status}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center py-2 border-y border-white/10 my-3">
+                <div>
+                  <p className="text-[10px] text-foreground/50">Total Amount</p>
+                  <p className="font-medium text-foreground text-sm">₹{fee.totalAmount.toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-foreground/50">Paid</p>
+                  <p className="font-medium text-green-400 text-sm">₹{fee.paidAmount.toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <p className="text-[10px] text-foreground/50 flex flex-col">
+                  Due: <span className="text-xs text-foreground/70">{new Date(fee.dueDate).toLocaleDateString()}</span>
+                </p>
+                <div className="flex gap-1.5">
+                  {fee.status !== 'Paid' && (
+                    <button 
+                      onClick={() => { setSelectedFee(fee); setIsPayModalOpen(true); }}
+                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium shadow-md shadow-primary/20"
+                    >
+                      Pay
+                    </button>
+                  )}
+                  {(fee.status === 'Paid' || fee.status === 'Partial') && (
+                    <>
+                      <button 
+                        onClick={() => { setSelectedFee(fee); setIsHistoryModalOpen(true); }}
+                        className="p-1.5 bg-white/10 text-foreground/70 rounded-lg"
+                      >
+                        <History size={14} />
+                      </button>
+                      <button 
+                        onClick={() => handlePrintReceipt(fee)}
+                        className="px-2 py-1.5 bg-white/10 text-foreground/70 rounded-lg text-[10px] font-medium"
+                      >
+                        Receipt
+                      </button>
+                    </>
+                  )}
+                  {(user?.role === 'admin' || user?.role === 'faculty') && (
+                    <button
+                      onClick={() => handleDeleteFee(fee._id)}
+                      className="p-1.5 bg-red-500/10 text-red-400 rounded-lg"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ===== DESKTOP TABLE VIEW ===== */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left text-sm text-foreground/70">
             <thead className="bg-black/20 text-foreground/50 border-b border-white/10">
               <tr>
