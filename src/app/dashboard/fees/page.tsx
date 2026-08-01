@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CreditCard, Search, Plus, X, IndianRupee, AlertCircle, CheckCircle2, Trash2, History } from 'lucide-react';
+import { CreditCard, Search, Plus, X, IndianRupee, AlertCircle, CheckCircle2, Trash2, History, Lock } from 'lucide-react';
 import { apiGet, apiPost, apiDelete } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
@@ -226,6 +226,16 @@ export default function FeesPage() {
 
   const totalCollected = fees.reduce((sum, f) => sum + f.paidAmount, 0);
   const totalPending = fees.reduce((sum, f) => sum + (f.totalAmount - f.paidAmount), 0);
+
+  if (user?.role === 'faculty' || user?.role === 'student') {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] text-center">
+        <Lock className="w-20 h-20 text-red-500/50 mb-6" />
+        <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
+        <p className="text-foreground/60 max-w-md">You do not have permission to view or manage fees. This area is restricted to Administrators only.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

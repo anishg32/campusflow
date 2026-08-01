@@ -18,7 +18,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, expectedRole?: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: string, phoneNumber?: string) => Promise<void>;
   logout: () => void;
 }
@@ -49,8 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, expectedRole?: string) => {
     const data = await apiPost<User>('/auth/login', { email, password });
+    
+    if (expectedRole && data.role !== expectedRole) {
+      throw new Error(`Account found, but not registered as ${expectedRole}.`);
+    }
+
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data));
     setToken(data.token);

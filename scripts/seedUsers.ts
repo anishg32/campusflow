@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import User, { Role } from '../src/lib/models/User';
 
-const MONGODB_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGO_URI || 'mongodb+srv://anishff976_db_user:%23sn8%40PuWvprW9i7@anish.qgxhp19.mongodb.net/campusflow?appName=anish';
 
 if (!MONGODB_URI) {
   console.error("Please define MONGO_URI in .env.local");

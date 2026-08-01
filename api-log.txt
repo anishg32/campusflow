@@ -1,0 +1,5 @@
+{"verifyRoll":"AIDS1001","verifyName":"Aarav Pandian","verifyDept":"6a6cc18ae9bbcf99cad5257a","verifyYear":"1","filter":{"rollNumber":{"$regex":{}},"name":{"$regex":{}},"department":"6a6cc18ae9bbcf99cad5257a","year":1}}
+{"verifyRoll":"AIDS1001","verifyName":"Aarav Pandian","verifyDept":"6a6cc18ae9bbcf99cad5257a","verifyYear":"1","filter":{"rollNumber":{"$regex":{}},"name":{"$regex":{}},"department":"6a6cc18ae9bbcf99cad5257a","year":1}}
+{"verifyRoll":"AIDS1001","verifyName":"Aarav Pandian","verifyDept":"6a6cc18ae9bbcf99cad5257a","verifyYear":"1","filter":{"rollNumber":{"$regex":{}},"name":{"$regex":{}},"department":"6a6cc18ae9bbcf99cad5257a","year":1}}
+{"verifyRoll":"AIDS1001","verifyName":"Aarav Pandian","verifyDept":"6a6cc18ae9bbcf99cad5257a","verifyYear":"1","filter":{"rollNumber":{"$regex":{}},"name":{"$regex":{}},"department":"6a6cc18ae9bbcf99cad5257a","year":1}}
+{"verifyRoll":"AIDS1001","verifyName":"Aarav Pandian","verifyDept":"6a6cc18ae9bbcf99cad5257a","verifyYear":"1","filter":{"rollNumber":{"$regex":{}},"name":{"$regex":{}},"department":"6a6cc18ae9bbcf99cad5257a","year":1}}

@@ -206,7 +206,6 @@ export default function Register() {
                   className="w-full px-4 py-3.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
                 >
                   <option value="faculty">Faculty</option>
-                  <option value="admin">Administrator</option>
                   <option value="student">Student</option>
                 </select>
               </div>

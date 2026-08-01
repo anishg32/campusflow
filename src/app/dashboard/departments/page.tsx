@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Plus, Users, Trash2, X } from 'lucide-react';
+import { Building2, Plus, Users, Trash2, X, Lock } from 'lucide-react';
 import { apiGet, apiPost, apiDelete } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface Department {
   _id: string;
@@ -22,6 +23,7 @@ export default function DepartmentsPage() {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [description, setDescription] = useState('');
+  const { user } = useAuth();
 
   const fetchDepartments = async () => {
     try {
@@ -74,6 +76,16 @@ export default function DepartmentsPage() {
     'from-cyan-500 to-blue-600',
     'from-violet-500 to-fuchsia-600',
   ];
+
+  if (user?.role !== 'admin') {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] text-center">
+        <Lock className="w-20 h-20 text-red-500/50 mb-6" />
+        <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
+        <p className="text-foreground/60 max-w-md">You do not have permission to view or manage departments. This area is restricted to Administrators only.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ClipboardCheck, Calendar, Check, X as XIcon, MessageCircle } from 'lucide-react';
+import { ClipboardCheck, Calendar, Check, X as XIcon, MessageCircle, Lock } from 'lucide-react';
 import { apiGet, apiPost } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
@@ -151,6 +151,16 @@ export default function AttendancePage() {
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://web.whatsapp.com/send?phone=91${phone}&text=${encodedMessage}`, '_blank');
   };
+
+  if (user?.role === 'student') {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] text-center">
+        <Lock className="w-20 h-20 text-red-500/50 mb-6" />
+        <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
+        <p className="text-foreground/60 max-w-md">You do not have permission to view this page. This area is restricted to Staff only.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

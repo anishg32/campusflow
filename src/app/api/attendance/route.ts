@@ -70,11 +70,13 @@ export async function GET(req: NextRequest) {
     const departmentId = searchParams.get('departmentId');
     const year = searchParams.get('year');
 
+    const studentParam = searchParams.get('student');
+
     if (session.role === 'student') {
       const currentStudent = await Student.findOne({ email: session.email });
-      if (!currentStudent) return NextResponse.json([]);
+      if (!currentStudent && !studentParam) return NextResponse.json([]);
       
-      const records = await Attendance.find({ student: currentStudent._id }).sort({ date: -1 });
+      const records = await Attendance.find({ student: studentParam || currentStudent?._id }).sort({ date: -1 });
       return NextResponse.json(records);
     }
 

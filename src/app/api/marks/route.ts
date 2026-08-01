@@ -23,10 +23,10 @@ export async function GET(request: NextRequest) {
     
     if (session.role === 'student') {
       const currentStudent = await Student.findOne({ email: session.email });
-      if (!currentStudent) {
+      if (!currentStudent && !studentParam) {
         return NextResponse.json([]);
       }
-      query.student = currentStudent._id;
+      query.student = studentParam || currentStudent?._id;
     }
     
     const marks = await Mark.find(query)

@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
-// Load env vars manually
+
 const envPath = path.resolve(__dirname, '../.env.local');
 if (fs.existsSync(envPath)) {
   const envConfig = fs.readFileSync(envPath, 'utf8');
@@ -59,7 +59,7 @@ async function seed() {
     let globalCounter = 1;
     const feeTitles = ['Semester 1 Tuition Fee', 'Semester 2 Tuition Fee', 'Hostel Fee', 'Transport Fee', 'Exam Fee'];
     
-    // Chunking to avoid memory issues
+    
     const chunkSize = 1000;
     for (let chunk = 0; chunk < 5; chunk++) {
       const studentsToCreate = [];

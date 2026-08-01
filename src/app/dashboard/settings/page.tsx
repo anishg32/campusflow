@@ -2,10 +2,20 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
-import { User, Mail, Shield } from 'lucide-react';
+import { User, Mail, Shield, Lock } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user } = useAuth();
+
+  if (user?.role !== 'admin') {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] text-center">
+        <Lock className="w-20 h-20 text-red-500/50 mb-6" />
+        <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
+        <p className="text-foreground/60 max-w-md">You do not have permission to view this page. This area is restricted to Administrators only.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-2xl">

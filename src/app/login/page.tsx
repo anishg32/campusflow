@@ -14,6 +14,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -24,7 +25,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      await login(email.trim(), password, role.toLowerCase());
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       setError(apiErr.message || 'Login failed. Please try again.');
@@ -155,7 +156,7 @@ export default function Login() {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-medium">Password</label>
-                <Link href="#" className="text-xs text-primary hover:underline transition-all">Forgot password?</Link>
+                <button type="button" onClick={() => setIsForgotModalOpen(true)} className="text-xs text-primary hover:underline transition-all">Forgot password?</button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -214,6 +215,29 @@ export default function Login() {
           </p>
         </motion.div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {isForgotModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-border rounded-2xl p-6 sm:p-8 w-full max-w-sm shadow-2xl relative">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Password Reset</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                For security reasons, password resets are handled manually. Please contact your department head or the system administrator to request a password reset.
+              </p>
+              <button 
+                onClick={() => setIsForgotModalOpen(false)}
+                className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+              >
+                Understood
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

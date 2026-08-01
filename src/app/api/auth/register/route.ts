@@ -17,12 +17,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const allowedRoles = [Role.STUDENT, Role.FACULTY];
+    const userRole = allowedRoles.includes(role as Role) ? role : Role.FACULTY;
+
     const user = await User.create({
       name,
       email,
       password,
       phoneNumber,
-      role: Object.values(Role).includes(role as Role) ? role : Role.FACULTY,
+      role: userRole,
     });
 
     if (user) {

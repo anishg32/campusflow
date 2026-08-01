@@ -86,11 +86,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
               {navItems
                 .filter(item => {
-                  if (user?.role === 'student') {
-                    // Only show Overview, Students (My Profile), Settings for students
-                    return ['Overview', 'Students', 'Settings'].includes(item.name);
+                  if (user?.role === 'admin') return true;
+                  if (user?.role === 'faculty') {
+                    return ['Overview', 'Students', 'Attendance', 'Marks'].includes(item.name);
                   }
-                  return true;
+                  if (user?.role === 'student') {
+                    return ['Overview', 'Students'].includes(item.name);
+                  }
+                  return false;
                 })
                 .map((item) => {
                   const Icon = item.icon;

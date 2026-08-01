@@ -15,12 +15,14 @@ export async function GET(req: NextRequest) {
     const filter: any = {};
     if (department) filter.department = department;
 
+    const studentParam = searchParams.get('student');
+
     if (session.role === 'student') {
       const currentStudent = await Student.findOne({ email: session.email });
-      if (!currentStudent) {
+      if (!currentStudent && !studentParam) {
         return NextResponse.json([]);
       }
-      filter.student = currentStudent._id;
+      filter.student = studentParam || currentStudent?._id;
     }
 
     const fees = await Fee.find(filter)

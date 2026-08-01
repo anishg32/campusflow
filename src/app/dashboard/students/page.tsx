@@ -240,12 +240,12 @@ export default function StudentsPage() {
   };
 
   // Student specific logic
-  const fetchStudentDashboardData = async () => {
+  const fetchStudentDashboardData = async (studentId: string) => {
     try {
       const [attData, feesData, marksData] = await Promise.all([
-        apiGet<any[]>('/attendance'),
-        apiGet<any[]>('/fees'),
-        apiGet<any[]>('/marks')
+        apiGet<any[]>(`/attendance?student=${studentId}`),
+        apiGet<any[]>(`/fees?student=${studentId}`),
+        apiGet<any[]>(`/marks?student=${studentId}`)
       ]);
       setStudentAttendance(attData);
       setStudentFees(feesData);
@@ -264,13 +264,13 @@ export default function StudentsPage() {
     setVerifyLoading(true);
     setVerifyError('');
     try {
-      const data = await apiGet<Student[]>(
-        `/students?verifyRoll=${verifyRoll}&verifyName=${verifyName}&verifyDept=${verifyDept}&verifyYear=${verifyYear}`
+      const data = await apiGet<{students: Student[]}>(
+        `/students?verifyRoll=${encodeURIComponent(verifyRoll)}&verifyName=${encodeURIComponent(verifyName)}&verifyDept=${encodeURIComponent(verifyDept)}&verifyYear=${encodeURIComponent(verifyYear)}`
       );
-      if (data && data.length > 0) {
-        setStudents(data);
+      if (data && data.students && data.students.length > 0) {
+        setStudents(data.students);
         setPrivacyVerified(true);
-        fetchStudentDashboardData();
+        fetchStudentDashboardData(data.students[0]._id);
       } else {
         setVerifyError('Verification failed. No matching student record found.');
       }

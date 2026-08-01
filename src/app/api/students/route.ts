@@ -20,11 +20,14 @@ export async function GET(req: NextRequest) {
     if (year) filter.year = Number(year);
     if (section) filter.section = section;
     if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { rollNumber: { $regex: search, $options: 'i' } },
-        { phoneNumber: { $regex: search, $options: 'i' } },
-      ];
+      const tokens = search.trim().split(/\s+/);
+      filter.$and = tokens.map(token => ({
+        $or: [
+          { name: { $regex: token, $options: 'i' } },
+          { rollNumber: { $regex: token, $options: 'i' } },
+          { phoneNumber: { $regex: token, $options: 'i' } },
+        ]
+      }));
     }
 
     if (session.role === 'student') {
@@ -36,13 +39,17 @@ export async function GET(req: NextRequest) {
       if (!verifyRoll || !verifyName || !verifyDept || !verifyYear) {
         return NextResponse.json({ message: 'Missing verification details' }, { status: 400 });
       }
-      filter.rollNumber = { $regex: new RegExp(`^${verifyRoll}$`, 'i') };
-      filter.name = { $regex: new RegExp(`^${verifyName}$`, 'i') };
+      filter.rollNumber = { $regex: new RegExp(`^${verifyRoll.trim()}$`, 'i') };
+      filter.name = { $regex: new RegExp(verifyName.trim(), 'i') };
       filter.department = verifyDept;
       filter.year = Number(verifyYear);
       
-      // Clear $or since we are forcing an exact match for privacy
+      console.log('STUDENT VERIFICATION FILTER:', filter);
+      require('fs').appendFileSync('api-log.txt', JSON.stringify({verifyRoll, verifyName, verifyDept, verifyYear, filter}) + '\n');
+      
+      // Clear $and/$or since we are forcing an exact match for privacy
       delete filter.$or;
+      delete filter.$and;
     }
 
     const limit = Number(searchParams.get('limit')) || 50;

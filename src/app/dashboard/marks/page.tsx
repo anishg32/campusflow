@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, X, GraduationCap, CheckCircle2, AlertCircle, Trash2, Edit, Bell, TrendingDown, Lightbulb, CheckCircle, Clock } from 'lucide-react';
+import { Search, Plus, X, GraduationCap, CheckCircle2, AlertCircle, Trash2, Edit, Bell, TrendingDown, Lightbulb, CheckCircle, Clock, Lock } from 'lucide-react';
 import { apiGet, apiPost, apiDelete, apiPut } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useSearchParams } from 'next/navigation';
@@ -223,14 +223,19 @@ export default function MarksPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [marksRes, deptsRes, studentsRes] = await Promise.all([
-        apiGet<Mark[]>('/marks'),
-        apiGet<Department[]>('/departments'),
-        apiGet<any>('/students?limit=10000')
-      ]);
-      setMarks(marksRes);
-      setDepartments(deptsRes);
-      setStudents(Array.isArray(studentsRes?.students) ? studentsRes.students : (Array.isArray(studentsRes) ? studentsRes : []));
+      if (user?.role === 'student') {
+        const marksRes = await apiGet<Mark[]>('/marks');
+        setMarks(marksRes);
+      } else {
+        const [marksRes, deptsRes, studentsRes] = await Promise.all([
+          apiGet<Mark[]>('/marks'),
+          apiGet<Department[]>('/departments'),
+          apiGet<any>('/students?limit=10000')
+        ]);
+        setMarks(marksRes);
+        setDepartments(deptsRes);
+        setStudents(Array.isArray(studentsRes?.students) ? studentsRes.students : (Array.isArray(studentsRes) ? studentsRes : []));
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -494,6 +499,16 @@ export default function MarksPage() {
 
     return true;
   });
+
+  if (user?.role === 'student') {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] text-center">
+        <Lock className="w-20 h-20 text-red-500/50 mb-6" />
+        <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
+        <p className="text-foreground/60 max-w-md">You do not have permission to view this page. You can view your marks in your Student Profile.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
