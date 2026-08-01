@@ -52,7 +52,7 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-background flex flex-col font-sans text-foreground selection:bg-primary/30 overflow-hidden">
+    <main className="min-h-screen bg-background flex flex-col font-sans text-foreground selection:bg-primary/30 overflow-x-hidden">
       
       {/* Background conditionally rendered based on theme */}
       {mounted && currentTheme === 'dark' ? (

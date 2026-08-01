@@ -165,11 +165,11 @@ export default function DepartmentsPage() {
             onClick={() => setShowForm(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="glass w-full max-w-md rounded-[2rem] p-8"
+              className="glass w-full max-w-md rounded-[2rem] p-5 sm:p-8"
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Add Department</h2>

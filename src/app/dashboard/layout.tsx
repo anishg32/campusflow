@@ -55,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="h-[100dvh] bg-background flex overflow-hidden font-sans selection:bg-primary/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] w-full relative">
+    <div className="min-h-[100dvh] bg-background flex font-sans selection:bg-primary/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] w-full relative">
       
       {/* Background Ambience */}
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -179,7 +179,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </header>
         </div>
 
-        <main className="p-4 lg:p-8 relative flex-1 overflow-y-auto w-full mx-auto">
+        <main className="p-4 lg:p-8 relative flex-1 w-full mx-auto">
           <div className="relative z-10 h-full">
             {children}
           </div>

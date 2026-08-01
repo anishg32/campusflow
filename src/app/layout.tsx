@@ -26,6 +26,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -36,10 +37,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col relative bg-background text-foreground transition-colors duration-300">
+      <body className="relative bg-background text-foreground transition-colors duration-300">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

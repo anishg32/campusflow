@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Send SMS to each student/parent
     for (const [id, student] of failingStudentsMap.entries()) {
       if (student.phone) {
-        const message = `CampusFlow Alert: Dear ${student.name}, you have ${student.count} subjects that need improvement. Please check your student portal.`;
+        const message = `CampusFlow Alert: Dear ${student.name}, you have ${student.count} subjects that need improvement. Please check your student portal: https://campusflow.vercel.app/dashboard/marks`;
         const success = await sendSMS(student.phone, message);
         if (success) {
           notifiedCount++;

@@ -27,15 +27,15 @@ export default function SettingsPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-3xl p-8"
+        className="glass rounded-3xl p-5 sm:p-8"
       >
-        <div className="flex items-center gap-6 mb-8 pb-8 border-b border-border">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-indigo-500/20">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-border">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg shadow-indigo-500/20">
             {user?.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
           </div>
           <div>
-            <h2 className="text-2xl font-bold">{user?.name}</h2>
-            <p className="text-foreground/60 text-sm">Teacher Account</p>
+            <h2 className="text-xl sm:text-2xl font-bold">{user?.name}</h2>
+            <p className="text-foreground/60 text-sm mt-1">Teacher Account</p>
           </div>
         </div>
 

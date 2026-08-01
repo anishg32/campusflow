@@ -157,7 +157,7 @@ export default function DashboardOverview() {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-3xl shadow-[0_0_30px_rgba(99,102,241,0.05)] backdrop-blur-md p-8 flex flex-col justify-center relative overflow-hidden group"
+              className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-3xl shadow-[0_0_30px_rgba(99,102,241,0.05)] backdrop-blur-md p-6 sm:p-8 flex flex-col justify-center relative overflow-hidden group"
             >
               <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-colors" />
               <GraduationCap className="w-12 h-12 text-indigo-400 mb-5 relative z-10" />
@@ -169,7 +169,7 @@ export default function DashboardOverview() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-3xl shadow-[0_0_30px_rgba(16,185,129,0.05)] backdrop-blur-md p-8 flex flex-col justify-center relative overflow-hidden group"
+              className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-3xl shadow-[0_0_30px_rgba(16,185,129,0.05)] backdrop-blur-md p-6 sm:p-8 flex flex-col justify-center relative overflow-hidden group"
             >
               <div className="absolute bottom-0 right-0 -mr-8 -mb-8 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl group-hover:bg-emerald-500/30 transition-colors" />
               <ClipboardCheck className="w-12 h-12 text-emerald-400 mb-5 relative z-10" />
