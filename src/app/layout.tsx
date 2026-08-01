@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SmoothScrollProvider } from "@/components/SmoothScrollProvider";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Arunachala Hitech Engineering College",
   description: "Teacher-led attendance management system for Arunachala Hitech Engineering College",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -39,10 +47,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SmoothScrollProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              {children}
+              <PWAInstallPrompt />
+            </AuthProvider>
           </SmoothScrollProvider>
         </ThemeProvider>
       </body>
+
     </html>
   );
 }

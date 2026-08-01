@@ -20,6 +20,7 @@ async function seedAll() {
       { name: 'Civil Engineering', code: 'CE', description: 'Department of Civil Engineering — Covers Structural Analysis, Construction Management, and Environmental Engineering.' },
       { name: 'Electrical Engineering', code: 'EE', description: 'Department of Electrical & Electronics Engineering — Covers Power Systems, Control Systems, and Renewable Energy.' },
       { name: 'Information Technology', code: 'IT', description: 'Department of Information Technology — Covers Networking, Cloud Computing, Database Management, and Software Engineering.' },
+      { name: 'Artificial Intelligence & Data Science', code: 'AIDS', description: 'Department of Artificial Intelligence & Data Science — Covers Machine Learning, Deep Learning, Big Data, and NLP.' },
     ];
 
     const deptCollection = db.collection('departments');
@@ -40,6 +41,7 @@ async function seedAll() {
       { name: 'Dr. Anitha Nair', email: 'anitha@college.edu', password: hashedFacultyPass, role: 'faculty', phoneNumber: '9876543213', department: deptIds[3] },
       { name: 'Prof. Karthik Rajan', email: 'karthik@college.edu', password: hashedFacultyPass, role: 'faculty', phoneNumber: '9876543214', department: deptIds[4] },
       { name: 'Dr. Lakshmi Devi', email: 'lakshmi@college.edu', password: hashedFacultyPass, role: 'faculty', phoneNumber: '9876543215', department: deptIds[5] },
+      { name: 'Dr. Ramesh Babu', email: 'ramesh@college.edu', password: hashedFacultyPass, role: 'faculty', phoneNumber: '9876543216', department: deptIds[6] },
     ];
 
     const usersCollection = db.collection('users');
