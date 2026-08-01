@@ -163,36 +163,36 @@ export default function AttendancePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 max-w-7xl mx-auto pb-6">
       <div>
-        <h1 className="text-3xl font-bold">Attendance</h1>
-        <p className="text-foreground/60 text-sm mt-1">{(user?.role as string) === 'student' ? 'View your attendance history' : 'Mark and view student attendance'}</p>
+        <h1 className="text-xl lg:text-2xl font-bold tracking-tight">Attendance</h1>
+        <p className="text-foreground/60 text-xs lg:text-sm mt-0.5">{(user?.role as string) === 'student' ? 'View your attendance history' : 'Mark and view student attendance'}</p>
       </div>
 
       {(user?.role as string) === 'student' ? (
-        <div className="glass rounded-2xl overflow-hidden mt-6">
-          <table className="w-full">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden mt-4 lg:mt-6 shadow-sm">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left px-6 py-4 text-sm font-bold text-foreground/60">Date</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-foreground/60">Status</th>
+              <tr className="border-b border-border bg-foreground/[0.02]">
+                <th className="text-left px-4 lg:px-6 py-3 font-semibold text-foreground/70">Date</th>
+                <th className="text-left px-4 lg:px-6 py-3 font-semibold text-foreground/70">Status</th>
               </tr>
             </thead>
             <tbody>
               {studentHistory.map((record, i) => (
                 <motion.tr
                   key={record._id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.02 }}
-                  className={`border-b border-border/50 transition-colors ${
+                  className={`border-b border-border hover:bg-foreground/[0.02] transition-colors ${
                     record.status === 'present' ? 'bg-emerald-500/5' : record.status === 'absent' ? 'bg-red-500/5' : ''
                   }`}
                 >
-                  <td className="px-6 py-4">{new Date(record.date).toLocaleDateString()}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      record.status === 'present' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'
+                  <td className="px-4 lg:px-6 py-3 font-medium">{new Date(record.date).toLocaleDateString()}</td>
+                  <td className="px-4 lg:px-6 py-3">
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] lg:text-xs font-bold ${
+                      record.status === 'present' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
                     }`}>
                       {record.status?.toUpperCase() || 'UNKNOWN'}
                     </span>
@@ -201,7 +201,7 @@ export default function AttendancePage() {
               ))}
               {studentHistory.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={2} className="px-6 py-8 text-center text-foreground/40">No attendance records found.</td>
+                  <td colSpan={2} className="px-6 py-8 text-center text-foreground/40 text-sm">No attendance records found.</td>
                 </tr>
               )}
             </tbody>
@@ -210,213 +210,276 @@ export default function AttendancePage() {
       ) : (
         <>
           {/* Controls */}
-          <div className="glass rounded-2xl p-6 flex flex-col sm:flex-row gap-4 items-end">
-            <div className="flex-1">
-          <label className="block text-sm font-medium mb-2">Department</label>
-          <select
-            value={selectedDept}
-            onChange={(e) => setSelectedDept(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-background/50 border border-border focus:border-indigo-500 outline-none transition-all"
-          >
-            <option value="">Select Department</option>
-            {departments.map((dept) => (
-              <option key={dept._id} value={dept._id}>{dept.name} ({dept.code})</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex-1">
-          <label className="block text-sm font-medium mb-2">Year</label>
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-background/50 border border-border focus:border-indigo-500 outline-none transition-all"
-          >
-            <option value="">All Years</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-          </select>
-        </div>
-        <div className="flex-1">
-          <label className="block text-sm font-medium mb-2">Date</label>
-          <div className="relative">
-            <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40" />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-background/50 border border-border focus:border-indigo-500 outline-none transition-all"
-            />
-          </div>
-        </div>
-      </div>
-
-      {!selectedDept ? (
-        <div className="glass rounded-3xl p-16 text-center">
-          <ClipboardCheck className="mx-auto mb-4 opacity-30" size={64} />
-          <p className="text-foreground/40 text-xl font-medium">Select a department to mark attendance</p>
-          <p className="text-foreground/30 text-sm mt-2">Choose a department and date above</p>
-        </div>
-      ) : loading ? (
-        <div className="text-center py-16 text-foreground/40">Loading students...</div>
-      ) : students.length === 0 ? (
-        <div className="glass rounded-3xl p-16 text-center">
-          <ClipboardCheck className="mx-auto mb-4 opacity-30" size={64} />
-          <p className="text-foreground/40 text-xl font-medium">No students in this department</p>
-          <p className="text-foreground/30 text-sm mt-2">Add students to this department first</p>
-        </div>
-      ) : (
-        <>
-          {/* Quick Actions & Stats */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={markAllPresent}
-                className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-500 font-medium hover:bg-emerald-500/20 transition-colors text-sm"
+          <div className="bg-card border border-border rounded-2xl p-3 lg:p-4 flex flex-col gap-3 shadow-sm">
+            <div className="flex gap-2">
+              <select
+                value={selectedDept}
+                onChange={(e) => setSelectedDept(e.target.value)}
+                className="flex-1 px-3 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary outline-none transition-all"
               >
-                All Present
-              </button>
-              <button
-                onClick={markAllAbsent}
-                className="px-4 py-2 rounded-xl bg-red-500/10 text-red-500 font-medium hover:bg-red-500/20 transition-colors text-sm"
+                <option value="">Select Department</option>
+                {departments.map((dept) => (
+                  <option key={dept._id} value={dept._id}>{dept.name} ({dept.code})</option>
+                ))}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="flex-1 px-3 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary outline-none transition-all"
               >
-                All Absent
-              </button>
+                <option value="">All Years</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
             </div>
-            <div className="flex items-center gap-6 text-sm">
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
-                Present: <strong>{presentCount}</strong>
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                Absent: <strong>{absentCount}</strong>
-              </span>
-              <span className="text-foreground/50">
-                Total: {students.length}
-              </span>
+            <div className="relative">
+              <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary outline-none transition-all"
+              />
             </div>
           </div>
 
-          {/* Student List */}
-          <div className="glass rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left px-6 py-4 text-sm font-bold text-foreground/60">Student</th>
-                    <th className="text-left px-6 py-4 text-sm font-bold text-foreground/60">Roll No.</th>
-                    <th className="text-left px-6 py-4 text-sm font-bold text-foreground/60">Phone</th>
-                    <th className="text-center px-6 py-4 text-sm font-bold text-foreground/60">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((student, i) => {
-                    const status = attendance[student._id];
-                    return (
-                      <motion.tr
-                        key={student._id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.02 }}
-                        className={`border-b border-border/50 transition-colors ${
-                          status === 'present' ? 'bg-emerald-500/5' : status === 'absent' ? 'bg-red-500/5' : ''
-                        }`}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-foreground font-bold text-xs">
-                              {student.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                            </div>
-                            <span className="font-medium text-sm">{student.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-mono">{student.rollNumber}</td>
-                        <td className="px-6 py-4 text-sm text-foreground/60">{student.phoneNumber}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-2">
+          {!selectedDept ? (
+            <div className="bg-card border border-border rounded-2xl p-12 lg:p-16 text-center shadow-sm">
+              <ClipboardCheck className="mx-auto mb-4 opacity-20" size={48} />
+              <p className="text-foreground/50 text-base lg:text-lg font-medium">Select a department to mark attendance</p>
+              <p className="text-foreground/30 text-sm mt-1">Choose a department and date above</p>
+            </div>
+          ) : loading ? (
+            <div className="text-center py-16 text-foreground/40 text-sm">
+              <div className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full mx-auto mb-3" />
+              Loading students...
+            </div>
+          ) : students.length === 0 ? (
+            <div className="bg-card border border-border rounded-2xl p-12 lg:p-16 text-center shadow-sm">
+              <ClipboardCheck className="mx-auto mb-4 opacity-20" size={48} />
+              <p className="text-foreground/50 text-base font-medium">No students in this department</p>
+              <p className="text-foreground/30 text-sm mt-1">Add students to this department first</p>
+            </div>
+          ) : (
+            <>
+              {/* Quick Actions & Stats */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-1">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={markAllPresent}
+                    className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-500 font-medium hover:bg-emerald-500/20 transition-colors text-xs lg:text-sm"
+                  >
+                    All Present
+                  </button>
+                  <button
+                    onClick={markAllAbsent}
+                    className="px-4 py-2 rounded-xl bg-red-500/10 text-red-500 font-medium hover:bg-red-500/20 transition-colors text-xs lg:text-sm"
+                  >
+                    All Absent
+                  </button>
+                </div>
+                <div className="flex items-center gap-4 text-xs lg:text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    Present: <strong>{presentCount}</strong>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                    Absent: <strong>{absentCount}</strong>
+                  </span>
+                  <span className="text-foreground/40">
+                    Total: {students.length}
+                  </span>
+                </div>
+              </div>
+
+              {/* ===== MOBILE CARD VIEW ===== */}
+              <div className="lg:hidden space-y-2.5">
+                {students.map((student, i) => {
+                  const status = attendance[student._id];
+                  return (
+                    <motion.div
+                      key={student._id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.02, duration: 0.25 }}
+                      className={`bg-card border rounded-2xl p-4 shadow-sm transition-colors ${
+                        status === 'present' ? 'border-emerald-500/30 bg-emerald-500/5' : 
+                        status === 'absent' ? 'border-red-500/30 bg-red-500/5' : 
+                        'border-border'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center text-primary font-bold text-xs border border-primary/10 shrink-0">
+                          {student.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        </div>
+                        
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-foreground truncate">{student.name}</p>
+                          <p className="text-[11px] text-foreground/50 font-mono mt-0.5">{student.rollNumber}</p>
+                        </div>
+                        
+                        {/* Present/Absent Buttons */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => {
+                              setAttendance(prev => ({ ...prev, [student._id]: 'present' }));
+                              setSaved(false);
+                            }}
+                            className={`p-2.5 rounded-xl transition-all ${
+                              status === 'present'
+                                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+                                : 'bg-foreground/5 border border-border text-foreground/40'
+                            }`}
+                          >
+                            <Check size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setAttendance(prev => ({ ...prev, [student._id]: 'absent' }));
+                              setSaved(false);
+                            }}
+                            className={`p-2.5 rounded-xl transition-all ${
+                              status === 'absent'
+                                ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
+                                : 'bg-foreground/5 border border-border text-foreground/40'
+                            }`}
+                          >
+                            <XIcon size={16} />
+                          </button>
+                          {status && (
                             <button
-                              onClick={() => {
-                                setAttendance(prev => ({ ...prev, [student._id]: 'present' }));
-                                setSaved(false);
-                              }}
-                              className={`p-2 rounded-lg transition-all ${
-                                status === 'present'
-                                  ? 'bg-emerald-500 text-foreground shadow-lg shadow-emerald-500/30'
-                                  : 'bg-background/50 border border-border text-foreground/40 hover:border-emerald-500/50 hover:text-emerald-500'
-                              }`}
+                              onClick={() => sendWhatsAppMessage(student, status, selectedDate)}
+                              className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 transition-colors"
+                              title="WhatsApp Parent"
                             >
-                              <Check size={16} />
+                              <MessageCircle size={14} />
                             </button>
-                            <button
-                              onClick={() => {
-                                setAttendance(prev => ({ ...prev, [student._id]: 'absent' }));
-                                setSaved(false);
-                              }}
-                              className={`p-2 rounded-lg transition-all ${
-                                status === 'absent'
-                                  ? 'bg-red-500 text-foreground shadow-lg shadow-red-500/30'
-                                  : 'bg-background/50 border border-border text-foreground/40 hover:border-red-500/50 hover:text-red-500'
-                              }`}
-                            >
-                              <XIcon size={16} />
-                            </button>
-                            {status && (
-                              <>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* ===== DESKTOP TABLE VIEW ===== */}
+              <div className="hidden lg:block bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-foreground/[0.02]">
+                        <th className="text-left px-6 py-3 font-semibold text-foreground/70">Student</th>
+                        <th className="text-left px-6 py-3 font-semibold text-foreground/70">Roll No.</th>
+                        <th className="text-left px-6 py-3 font-semibold text-foreground/70">Phone</th>
+                        <th className="text-center px-6 py-3 font-semibold text-foreground/70">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((student, i) => {
+                        const status = attendance[student._id];
+                        return (
+                          <motion.tr
+                            key={student._id}
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.02 }}
+                            className={`border-b border-border/50 hover:bg-foreground/[0.02] transition-colors ${
+                              status === 'present' ? 'bg-emerald-500/5' : status === 'absent' ? 'bg-red-500/5' : ''
+                            }`}
+                          >
+                            <td className="px-6 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                                  {student.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                </div>
+                                <span className="font-medium text-foreground">{student.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-3 font-mono text-foreground/70">{student.rollNumber}</td>
+                            <td className="px-6 py-3 text-foreground/60">{student.phoneNumber}</td>
+                            <td className="px-6 py-3">
+                              <div className="flex items-center justify-center gap-2">
                                 <button
-                                  onClick={() => sendWhatsAppMessage(student, status, selectedDate)}
-                                  className="p-2 ml-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
-                                  title="Message Parent via WhatsApp"
+                                  onClick={() => {
+                                    setAttendance(prev => ({ ...prev, [student._id]: 'present' }));
+                                    setSaved(false);
+                                  }}
+                                  className={`p-2 rounded-lg transition-all ${
+                                    status === 'present'
+                                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+                                      : 'bg-background/50 border border-border text-foreground/40 hover:border-emerald-500/50 hover:text-emerald-500'
+                                  }`}
                                 >
-                                  <MessageCircle size={16} />
+                                  <Check size={16} />
                                 </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </motion.tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                                <button
+                                  onClick={() => {
+                                    setAttendance(prev => ({ ...prev, [student._id]: 'absent' }));
+                                    setSaved(false);
+                                  }}
+                                  className={`p-2 rounded-lg transition-all ${
+                                    status === 'absent'
+                                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
+                                      : 'bg-background/50 border border-border text-foreground/40 hover:border-red-500/50 hover:text-red-500'
+                                  }`}
+                                >
+                                  <XIcon size={16} />
+                                </button>
+                                {status && (
+                                  <button
+                                    onClick={() => sendWhatsAppMessage(student, status, selectedDate)}
+                                    className="p-2 ml-1 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition-colors"
+                                    title="Message Parent via WhatsApp"
+                                  >
+                                    <MessageCircle size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </motion.tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-          {/* Save Button */}
-          <div className="flex justify-end">
-            <button
-              onClick={handleSave}
-              disabled={saving || Object.keys(attendance).length === 0}
-              className={`px-8 py-4 rounded-xl font-bold text-lg transition-all flex items-center gap-3 ${
-                saved
-                  ? 'bg-emerald-500 text-foreground shadow-lg shadow-emerald-500/20'
-                  : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-foreground shadow-lg shadow-indigo-500/20 hover:scale-105'
-              } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
-            >
-              {saving ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Saving...
-                </>
-              ) : saved ? (
-                <>
-                  <Check size={20} />
-                  Attendance Saved!
-                </>
-              ) : (
-                <>
-                  <ClipboardCheck size={20} />
-                  Save Attendance
-                </>
-              )}
-            </button>
-          </div>
-        </>
-      )}
+              {/* Save Button */}
+              <div className="flex justify-end sticky bottom-4 z-30 pt-4 pb-2">
+                <button
+                  onClick={handleSave}
+                  disabled={saving || Object.keys(attendance).length === 0}
+                  className={`px-6 lg:px-8 py-3 lg:py-3.5 rounded-2xl font-bold text-sm lg:text-base transition-all flex items-center gap-2.5 shadow-xl ${
+                    saved
+                      ? 'bg-emerald-500 text-white shadow-emerald-500/30'
+                      : 'bg-primary text-primary-foreground shadow-primary/30 hover:scale-105'
+                  } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
+                >
+                  {saving ? (
+                    <>
+                      <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                      Saving...
+                    </>
+                  ) : saved ? (
+                    <>
+                      <Check size={18} />
+                      Saved!
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardCheck size={18} />
+                      Save Attendance
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
