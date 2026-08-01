@@ -588,7 +588,7 @@ export default function MarksPage() {
               </div>
             </div>
             
-            {user?.role !== 'student' && failingMarksList.length > 0 && (
+            {(user?.role as string) !== 'student' && failingMarksList.length > 0 && (
               <button 
                 onClick={async () => {
                   try {
@@ -645,7 +645,7 @@ export default function MarksPage() {
                 ))}
               </select>
 
-              {user?.role !== 'student' && (
+              {(user?.role as string) !== 'student' && (
                 <>
                   <select
                     value={filterDept}

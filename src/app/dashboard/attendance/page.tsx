@@ -166,10 +166,10 @@ export default function AttendancePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Attendance</h1>
-        <p className="text-foreground/60 text-sm mt-1">{user?.role === 'student' ? 'View your attendance history' : 'Mark and view student attendance'}</p>
+        <p className="text-foreground/60 text-sm mt-1">{(user?.role as string) === 'student' ? 'View your attendance history' : 'Mark and view student attendance'}</p>
       </div>
 
-      {user?.role === 'student' ? (
+      {(user?.role as string) === 'student' ? (
         <div className="glass rounded-2xl overflow-hidden mt-6">
           <table className="w-full">
             <thead>
