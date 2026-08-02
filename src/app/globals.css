@@ -42,6 +42,7 @@ body {
   color: var(--foreground);
   background-color: var(--background);
   overflow-x: hidden;
+  overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;

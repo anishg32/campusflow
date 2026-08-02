@@ -1074,7 +1074,7 @@ export default function StudentsPage() {
               exit={{ y: '100%', opacity: 1 }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-background w-full lg:max-w-6xl lg:rounded-2xl rounded-t-3xl shadow-2xl flex flex-col h-[95dvh] lg:h-[90vh] overflow-hidden border-t border-white/10 lg:border lg:border-border"
+              className="bg-background w-full lg:max-w-6xl lg:rounded-2xl rounded-t-3xl shadow-2xl flex flex-col h-[90dvh] overflow-hidden border-t border-white/10 lg:border lg:border-border"
             >
               {/* Drag Handle (Mobile) */}
               <div className="lg:hidden flex justify-center pt-3 pb-1">
@@ -1082,7 +1082,7 @@ export default function StudentsPage() {
               </div>
 
               {/* Header */}
-              <div className="flex items-center justify-between px-5 lg:px-6 py-3 lg:py-4 border-b border-border/50">
+              <div className="flex items-center justify-between px-5 lg:px-6 py-3 lg:py-4 border-b border-border/50 shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
                     {viewingStudent.name ? viewingStudent.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : 'S'}
@@ -1092,13 +1092,13 @@ export default function StudentsPage() {
                     <p className="text-xs text-primary font-mono">{viewingStudent.rollNumber}</p>
                   </div>
                 </div>
-                <button onClick={() => setShowViewModal(false)} className="p-2 rounded-xl hover:bg-white/10 text-foreground/70 transition-colors bg-white/5">
+                <button onClick={() => setShowViewModal(false)} className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/70 transition-colors bg-foreground/5">
                   <X size={18} />
                 </button>
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto overscroll-contain">
+              <div className="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
                 {viewLoading ? (
                   <div className="flex items-center justify-center py-20">
                     <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full" />

@@ -211,11 +211,11 @@ export default function AttendancePage() {
         <>
           {/* Controls */}
           <div className="bg-card border border-border rounded-2xl p-3 lg:p-4 flex flex-col gap-3 shadow-sm">
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <select
                 value={selectedDept}
                 onChange={(e) => setSelectedDept(e.target.value)}
-                className="flex-1 px-3 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary outline-none transition-all"
+                className="w-full px-3 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary outline-none transition-all"
               >
                 <option value="">Select Department</option>
                 {departments.map((dept) => (
@@ -225,7 +225,7 @@ export default function AttendancePage() {
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="flex-1 px-3 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary outline-none transition-all"
+                className="w-full px-3 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-primary outline-none transition-all"
               >
                 <option value="">All Years</option>
                 <option value="1">1st Year</option>
@@ -450,7 +450,7 @@ export default function AttendancePage() {
               </div>
 
               {/* Save Button */}
-              <div className="flex justify-end sticky bottom-4 z-30 pt-4 pb-2">
+              <div className="flex justify-end sticky bottom-[calc(80px+env(safe-area-inset-bottom))] lg:bottom-4 z-30 pt-4 pb-2">
                 <button
                   onClick={handleSave}
                   disabled={saving || Object.keys(attendance).length === 0}

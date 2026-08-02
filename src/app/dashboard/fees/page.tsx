@@ -238,7 +238,7 @@ export default function FeesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Student Fees</h1>
@@ -319,11 +319,11 @@ export default function FeesPage() {
               />
             </div>
             {(user?.role as string) !== 'student' && (
-              <div className="flex gap-2 w-full sm:w-auto">
+              <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
                 <select
                   value={filterDept}
                   onChange={(e) => setFilterDept(e.target.value)}
-                  className="flex-1 sm:flex-none bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full sm:w-auto bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
                 >
                   <option value="" className="bg-card">All Depts</option>
                   {departments.map(d => <option key={d._id} value={d._id} className="bg-card">{d.name}</option>)}
@@ -331,7 +331,7 @@ export default function FeesPage() {
                 <select
                   value={filterYear}
                   onChange={(e) => setFilterYear(e.target.value)}
-                  className="flex-1 sm:flex-none bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full sm:w-auto bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
                 >
                   <option value="" className="bg-card">All Years</option>
                   <option value="1" className="bg-card">1st Year</option>

@@ -23,6 +23,8 @@ export async function GET(req: NextRequest) {
         return NextResponse.json([]);
       }
       filter.student = studentParam || currentStudent?._id;
+    } else if (studentParam) {
+      filter.student = studentParam;
     }
 
     const fees = await Fee.find(filter)

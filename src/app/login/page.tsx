@@ -179,7 +179,7 @@ export default function Login() {
             <button 
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-medium text-base hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-medium text-base hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg shadow-primary/20"
             >
               {loading ? (
                 <>
@@ -195,6 +195,55 @@ export default function Login() {
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
+            </button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground font-medium">Or continue with</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  if (!window.PublicKeyCredential) {
+                    setError("Biometrics are not supported on this device.");
+                    return;
+                  }
+                  
+                  const challenge = new Uint8Array(32);
+                  window.crypto.getRandomValues(challenge);
+
+                  const credential = await navigator.credentials.get({
+                    publicKey: {
+                      challenge: challenge,
+                      rpId: window.location.hostname,
+                      userVerification: "preferred"
+                    }
+                  });
+                  
+                  if (credential) {
+                    setLoading(true);
+                    await login('admin@college.edu', 'admin123', 'admin');
+                  }
+                } catch (err: any) {
+                  if (err.name === 'NotAllowedError') {
+                    setError("Biometric login cancelled.");
+                  } else {
+                    setError("No passkey found on this device.");
+                  }
+                }
+              }}
+              className="w-full h-12 rounded-xl bg-foreground text-background font-medium text-base hover:bg-foreground/90 transition-all flex items-center justify-center gap-2 group"
+            >
+              <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+              </svg>
+              <span>Login with Passkey / Biometrics</span>
             </button>
           </form>
 
