@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
 import { verifyAuth } from '@/lib/auth';
 import Student from '@/lib/models/Student';
 import Department from '@/lib/models/Department';
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
       filter.year = Number(verifyYear);
       
       console.log('STUDENT VERIFICATION FILTER:', filter);
-      require('fs').appendFileSync('api-log.txt', JSON.stringify({verifyRoll, verifyName, verifyDept, verifyYear, filter}) + '\n');
+      fs.appendFileSync('api-log.txt', JSON.stringify({verifyRoll, verifyName, verifyDept, verifyYear, filter}) + '\n');
       
       // Clear $and/$or since we are forcing an exact match for privacy
       delete filter.$or;

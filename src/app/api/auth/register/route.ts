@@ -6,7 +6,9 @@ import { generateToken } from '@/lib/auth';
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
-    let { name, email, password, phoneNumber, role } = await req.json();
+    const body = await req.json();
+    let email = body.email;
+    const { name, password, phoneNumber, role } = body;
     email = email.trim().toLowerCase();
 
     const userExists = await User.findOne({ email });
