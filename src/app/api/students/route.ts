@@ -3,6 +3,7 @@ import fs from 'fs';
 import { verifyAuth } from '@/lib/auth';
 import Student from '@/lib/models/Student';
 import Department from '@/lib/models/Department';
+import User, { Role } from '@/lib/models/User';
 import connectDB from '@/lib/db';
 
 export async function GET(req: NextRequest) {
@@ -32,25 +33,23 @@ export async function GET(req: NextRequest) {
     }
 
     if (session.role === 'student') {
-      const verifyRoll = searchParams.get('verifyRoll');
-      const verifyName = searchParams.get('verifyName');
-      const verifyDept = searchParams.get('verifyDept');
-      const verifyYear = searchParams.get('verifyYear');
-
-      if (!verifyRoll || !verifyName || !verifyDept || !verifyYear) {
-        return NextResponse.json({ message: 'Missing verification details' }, { status: 400 });
+      // For students, simply match their loginId to rollNumber or registerNumber
+      if (!session.loginId) {
+        return NextResponse.json({ message: 'No login ID associated with this session' }, { status: 400 });
       }
-      filter.rollNumber = { $regex: new RegExp(`^${verifyRoll.trim()}$`, 'i') };
-      filter.name = { $regex: new RegExp(verifyName.trim(), 'i') };
-      filter.department = verifyDept;
-      filter.year = Number(verifyYear);
-      
-      console.log('STUDENT VERIFICATION FILTER:', filter);
-      fs.appendFileSync('api-log.txt', JSON.stringify({verifyRoll, verifyName, verifyDept, verifyYear, filter}) + '\n');
-      
-      // Clear $and/$or since we are forcing an exact match for privacy
+
+      // Clear any other filters so they only see their own profile
       delete filter.$or;
       delete filter.$and;
+      delete filter.department;
+      delete filter.year;
+      delete filter.section;
+      delete filter.name;
+
+      filter.$or = [
+        { rollNumber: { $regex: new RegExp(`^${session.loginId.trim()}$`, 'i') } },
+        { registerNumber: { $regex: new RegExp(`^${session.loginId.trim()}$`, 'i') } }
+      ];
     }
 
     const limit = Number(searchParams.get('limit')) || 50;
@@ -73,7 +72,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    await verifyAuth(req);
+    const session = await verifyAuth(req);
+    if (session.role !== 'admin') {
+      return NextResponse.json({ message: 'Only administrators can create students' }, { status: 403 });
+    }
     await connectDB();
 
     const { name, rollNumber, registerNumber, phoneNumber, email, department, year, section, parentName, parentPhoneNumber, gender, dateOfBirth } = await req.json();
@@ -102,6 +104,20 @@ export async function POST(req: NextRequest) {
       gender,
       dateOfBirth,
     });
+
+    // Auto-create a User account for the student so they can log in immediately
+    const existingUser = await User.findOne({ loginId: rollNumber });
+    if (!existingUser) {
+      const fallbackEmail = `${rollNumber.toLowerCase()}@student.campus.local`;
+      await User.create({
+        name,
+        email: email || fallbackEmail,
+        loginId: rollNumber,
+        password: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : 'student123',
+        role: Role.STUDENT,
+        department: dept._id,
+      });
+    }
 
     const populated = await student.populate('department', 'name code');
     return NextResponse.json(populated, { status: 201 });

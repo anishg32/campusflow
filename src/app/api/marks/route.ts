@@ -22,7 +22,12 @@ export async function GET(request: NextRequest) {
     if (studentParam) query.student = studentParam;
     
     if (session.role === 'student') {
-      const currentStudent = await Student.findOne({ email: session.email });
+      const currentStudent = await Student.findOne({
+        $or: [
+          { rollNumber: { $regex: new RegExp(`^${session.loginId?.trim() || ''}$`, 'i') } },
+          { registerNumber: { $regex: new RegExp(`^${session.loginId?.trim() || ''}$`, 'i') } }
+        ]
+      });
       if (!currentStudent && !studentParam) {
         return NextResponse.json([]);
       }

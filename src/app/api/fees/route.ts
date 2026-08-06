@@ -18,7 +18,12 @@ export async function GET(req: NextRequest) {
     const studentParam = searchParams.get('student');
 
     if (session.role === 'student') {
-      const currentStudent = await Student.findOne({ email: session.email });
+      const currentStudent = await Student.findOne({
+        $or: [
+          { rollNumber: { $regex: new RegExp(`^${session.loginId?.trim() || ''}$`, 'i') } },
+          { registerNumber: { $regex: new RegExp(`^${session.loginId?.trim() || ''}$`, 'i') } }
+        ]
+      });
       if (!currentStudent && !studentParam) {
         return NextResponse.json([]);
       }

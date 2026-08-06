@@ -12,7 +12,12 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     'compiler-innocent-regression-pharmacology.trycloudflare.com',
     'skating-specialist-alarm-without.trycloudflare.com',
-    '192.168.1.3'
+    '192.168.1.2',
+    '192.168.1.3',
+    '192.168.1.11',
+    '10.0.2.2',
+    'localhost',
+    'app'
   ],
 };
 

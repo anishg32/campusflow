@@ -1,31 +1,31 @@
 "use client";
 
 import { useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import type { ApiError } from '@/lib/api';
-import { GraduationCap, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Hash, Calendar } from 'lucide-react';
 
 export default function Login() {
   const [role, setRole] = useState<'Admin' | 'Faculty' | 'Student'>('Admin');
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    
 
     setLoading(true);
     try {
-      await login(email.trim(), password, role.toLowerCase());
+      if (role === 'Admin') {
+        await login({ email: identifier.trim(), password }, role.toLowerCase());
+      } else {
+        await login({ loginId: identifier.trim(), password }, role.toLowerCase());
+      }
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       setError(apiErr.message || 'Login failed. Please try again.');
@@ -35,6 +35,23 @@ export default function Login() {
   };
 
   const roles: ('Admin' | 'Faculty' | 'Student')[] = ['Admin', 'Faculty', 'Student'];
+
+  const getPlaceholder = () => {
+    switch (role) {
+      case 'Admin': return 'admin@gmail.com';
+      case 'Faculty': return 'e.g. FAC001';
+      case 'Student': return 'e.g. 960221104043';
+    }
+  };
+
+  const getLabel = () => {
+    switch (role) {
+      case 'Admin': return 'Email Address';
+      case 'Faculty': return 'Staff ID';
+      case 'Student': return 'Register Number (Roll No)';
+      default: return 'Login ID';
+    }
+  };
 
   return (
     <div className="min-h-screen w-full grid lg:grid-cols-2 bg-background font-sans selection:bg-primary/30">
@@ -108,7 +125,7 @@ export default function Login() {
               <button
                 key={r}
                 type="button"
-                onClick={() => { setRole(r); setError(''); }}
+                onClick={() => { setRole(r); setError(''); setIdentifier(''); }}
                 className={`relative py-2 text-sm font-medium rounded-lg transition-colors ${
                   role === r ? 'text-primary-foreground' : 'text-[var(--muted-foreground)] hover:text-foreground'
                 }`}
@@ -139,34 +156,41 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email Address</label>
+              <label className="text-sm font-medium">{getLabel()}</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                {role === 'Admin' ? (
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                ) : (
+                  <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                )}
                 <input 
-                  type="email" 
+                  type={role === 'Admin' ? 'email' : 'text'}
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   className="premium-input !pl-11"
-                  placeholder={role === 'Admin' ? 'admin@college.edu' : role === 'Faculty' ? 'faculty@college.edu' : 'student@college.edu'}
+                  placeholder={getPlaceholder()}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium">Password</label>
-                <button type="button" onClick={() => setIsForgotModalOpen(true)} className="text-xs text-primary hover:underline transition-all">Forgot password?</button>
-              </div>
+              <label className="text-sm font-medium">
+                {role === 'Student' ? 'Date of Birth' : 'Password'}
+              </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                {role === 'Student' ? (
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                ) : (
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                )}
                 <input 
-                  type="password" 
+                  type={role === 'Student' ? 'date' : 'password'} 
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="premium-input !pl-11"
-                  placeholder="••••••••"
+                  placeholder={role === 'Student' ? '' : '••••••••'}
                 />
               </div>
             </div>
@@ -196,97 +220,15 @@ export default function Login() {
                 </>
               )}
             </button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground font-medium">Or continue with</span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  if (!window.PublicKeyCredential) {
-                    setError("Biometrics are not supported on this device.");
-                    return;
-                  }
-                  
-                  const challenge = new Uint8Array(32);
-                  window.crypto.getRandomValues(challenge);
-
-                  const credential = await navigator.credentials.get({
-                    publicKey: {
-                      challenge: challenge,
-                      rpId: window.location.hostname,
-                      userVerification: "preferred"
-                    }
-                  });
-                  
-                  if (credential) {
-                    setLoading(true);
-                    await login('admin@college.edu', 'admin123', 'admin');
-                  }
-                } catch (err: any) {
-                  if (err.name === 'NotAllowedError') {
-                    setError("Biometric login cancelled.");
-                  } else {
-                    setError("No passkey found on this device.");
-                  }
-                }
-              }}
-              className="w-full h-12 rounded-xl bg-foreground text-background font-medium text-base hover:bg-foreground/90 transition-all flex items-center justify-center gap-2 group"
-            >
-              <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
-              </svg>
-              <span>Login with Passkey / Biometrics</span>
-            </button>
           </form>
 
-          <div className="text-center text-xs text-muted-foreground space-y-1 pt-6 pb-2 border-t border-border">
-            <p className="font-medium">Demo Credentials</p>
-            <p>
-              {role === 'Admin' && "admin@college.edu / admin123"}
-              {role === 'Faculty' && "faculty@college.edu / faculty123"}
-              {role === 'Student' && "student@college.edu / student123"}
+          <div className="text-center text-xs text-muted-foreground pt-4 border-t border-border">
+            <p className="text-foreground/40">
+              Contact your administrator if you need login credentials.
             </p>
           </div>
-          
-          <p className="text-center text-sm text-foreground/60 pt-2">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">
-              Register here
-            </Link>
-          </p>
         </motion.div>
       </div>
-
-      {/* Forgot Password Modal */}
-      {isForgotModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-border rounded-2xl p-6 sm:p-8 w-full max-w-sm shadow-2xl relative">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Password Reset</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                For security reasons, password resets are handled manually. Please contact your department head or the system administrator to request a password reset.
-              </p>
-              <button 
-                onClick={() => setIsForgotModalOpen(false)}
-                className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
-              >
-                Understood
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }

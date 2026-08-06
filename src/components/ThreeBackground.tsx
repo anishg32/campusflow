@@ -2,8 +2,28 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Stars, Sparkles } from "@react-three/drei";
-import { useRef, useState } from "react";
+import React, { useRef, useState, Component, ErrorInfo, ReactNode } from "react";
 import * as THREE from "three";
+
+class WebGLErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(_: Error) {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("WebGL Background Error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      // Fallback for devices/emulators that crash on WebGL
+      return <div className="absolute inset-0 bg-gradient-to-br from-[#000005] via-purple-900/20 to-black pointer-events-none" />;
+    }
+    return this.props.children;
+  }
+}
 
 function ShootingStar() {
   const ref = useRef<THREE.Mesh>(null);
@@ -81,17 +101,19 @@ function SpaceDust() {
 export default function ThreeBackground() {
   return (
     <div className="fixed inset-0 z-[-5] bg-[#000005] pointer-events-none">
-      <Canvas camera={{ position: [0, 0, 5], fov: 60 }}>
-        <ambientLight intensity={1} />
-        
-        {/* The rotating space environment */}
-        <SpaceDust />
-        
-        {/* Shooting Stars */}
-        {Array.from({ length: 7 }).map((_, i) => (
-          <ShootingStar key={i} />
-        ))}
-      </Canvas>
+      <WebGLErrorBoundary>
+        <Canvas camera={{ position: [0, 0, 5], fov: 60 }}>
+          <ambientLight intensity={1} />
+          
+          {/* The rotating space environment */}
+          <SpaceDust />
+          
+          {/* Shooting Stars */}
+          {Array.from({ length: 7 }).map((_, i) => (
+            <ShootingStar key={i} />
+          ))}
+        </Canvas>
+      </WebGLErrorBoundary>
     </div>
   );
 }

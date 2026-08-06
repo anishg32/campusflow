@@ -27,9 +27,6 @@ export function Header() {
           <Link href="/login" className="text-sm font-bold text-foreground/80 hover:text-foreground transition-colors">
             Staff Login
           </Link>
-          <Link href="/register" className="text-sm font-bold px-6 py-2.5 bg-primary/90 text-primary-foreground rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.4)] hover:bg-primary transition-all">
-            Register
-          </Link>
         </div>
       </div>
     </header>

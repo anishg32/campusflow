@@ -74,7 +74,12 @@ export async function GET(req: NextRequest) {
 
     if (studentParam) {
       if (session.role === 'student') {
-        const currentStudent = await Student.findOne({ email: session.email });
+        const currentStudent = await Student.findOne({
+          $or: [
+            { rollNumber: { $regex: new RegExp(`^${session.loginId?.trim() || ''}$`, 'i') } },
+            { registerNumber: { $regex: new RegExp(`^${session.loginId?.trim() || ''}$`, 'i') } }
+          ]
+        });
         if (!currentStudent) return NextResponse.json([]);
         // Force the student to only see their own attendance or the queried one if we added support for parent viewing.
         // For security, just override with their own ID if it doesn't match? No, if we want strict privacy:
@@ -85,7 +90,12 @@ export async function GET(req: NextRequest) {
     }
 
     if (session.role === 'student') {
-      const currentStudent = await Student.findOne({ email: session.email });
+      const currentStudent = await Student.findOne({
+        $or: [
+          { rollNumber: { $regex: new RegExp(`^${session.loginId?.trim() || ''}$`, 'i') } },
+          { registerNumber: { $regex: new RegExp(`^${session.loginId?.trim() || ''}$`, 'i') } }
+        ]
+      });
       if (!currentStudent) return NextResponse.json([]);
       const records = await Attendance.find({ student: currentStudent._id }).sort({ date: -1 });
       return NextResponse.json(records);

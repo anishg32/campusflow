@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import Student from '@/lib/models/Student';
+import User from '@/lib/models/User';
 import connectDB from '@/lib/db';
 
 export async function GET(
@@ -59,6 +60,24 @@ export async function PUT(
     if (dateOfBirth !== undefined) student.dateOfBirth = dateOfBirth;
 
     await student.save();
+    
+    // Sync with User account
+    const existingUser = await User.findOne({ loginId: student.rollNumber });
+    if (existingUser) {
+      if (name) existingUser.name = name;
+      if (email !== undefined) existingUser.email = email || existingUser.email;
+      if (department) existingUser.department = department;
+      if (dateOfBirth) existingUser.password = new Date(dateOfBirth).toISOString().split('T')[0];
+      await existingUser.save();
+    } else if (rollNumber && rollNumber !== student.rollNumber) {
+      // If roll number changed, update old user if it exists
+      const oldUser = await User.findOne({ loginId: rollNumber });
+      if (oldUser) {
+        oldUser.loginId = student.rollNumber;
+        await oldUser.save();
+      }
+    }
+
     const populated = await student.populate('department', 'name code');
     return NextResponse.json(populated);
   } catch (error: any) {
@@ -79,6 +98,10 @@ export async function DELETE(
     if (!student) {
       return NextResponse.json({ message: 'Student not found' }, { status: 404 });
     }
+    
+    // Also delete associated User account
+    await User.deleteOne({ loginId: student.rollNumber });
+    
     await student.deleteOne();
     return NextResponse.json({ message: 'Student removed successfully' });
   } catch (error: any) {

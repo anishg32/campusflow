@@ -227,7 +227,7 @@ export default function FeesPage() {
   const totalCollected = fees.reduce((sum, f) => sum + f.paidAmount, 0);
   const totalPending = fees.reduce((sum, f) => sum + (f.totalAmount - f.paidAmount), 0);
 
-  if (user?.role === 'faculty' || user?.role === 'student') {
+  if (user?.role === 'faculty') {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-center">
         <Lock className="w-20 h-20 text-red-500/50 mb-6" />
@@ -244,7 +244,7 @@ export default function FeesPage() {
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Student Fees</h1>
           <p className="text-foreground/50 mt-1">Manage and track student fee invoices</p>
         </div>
-        {(user?.role === 'admin' || user?.role === 'faculty') && (
+        {user?.role === 'admin' && (
           <button 
             onClick={() => setIsAddModalOpen(true)}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"

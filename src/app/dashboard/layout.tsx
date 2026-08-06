@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Building2, ClipboardCheck, Settings, LogOut, GraduationCap, Menu, X, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, ClipboardCheck, Settings, LogOut, GraduationCap, Menu, X, CreditCard, Megaphone, UserCog, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -12,11 +12,14 @@ import Image from 'next/image';
 
 const navItems = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Manage Users', href: '/dashboard/users', icon: UserCog },
   { name: 'Students', href: '/dashboard/students', icon: Users },
   { name: 'Departments', href: '/dashboard/departments', icon: Building2 },
   { name: 'Attendance', href: '/dashboard/attendance', icon: ClipboardCheck },
   { name: 'Fees', href: '/dashboard/fees', icon: CreditCard },
+  { name: 'Study Materials', href: '/dashboard/materials', icon: BookOpen },
   { name: 'Marks', href: '/dashboard/marks', icon: GraduationCap },
+  { name: 'Circulars', href: '/dashboard/circulars', icon: Megaphone },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
@@ -49,10 +52,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const visibleNavItems = navItems.filter(item => {
     if (user?.role === 'admin') return true;
     if (user?.role === 'faculty') {
-      return ['Overview', 'Students', 'Attendance', 'Marks'].includes(item.name);
+      return ['Overview', 'Students', 'Attendance', 'Marks', 'Study Materials', 'Circulars'].includes(item.name);
     }
     if (user?.role === 'student') {
-      return ['Overview', 'Students'].includes(item.name);
+      return ['Overview', 'Students', 'Attendance', 'Marks', 'Study Materials', 'Circulars'].includes(item.name);
     }
     return false;
   });
@@ -136,9 +139,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <p className="text-sm font-bold text-foreground leading-none">{user.name}</p>
                 <p className="text-xs text-foreground/50 capitalize mt-1 font-medium">{user.role || 'Teacher'}</p>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-purple-600 border border-white/20 shadow-lg cursor-pointer flex items-center justify-center text-white font-bold text-xs hover:scale-105 hover:shadow-primary/50 transition-all duration-300">
-                {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
-              </div>
+              <Link href="/dashboard/profile">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-purple-600 border border-white/20 shadow-lg cursor-pointer flex items-center justify-center text-white font-bold text-xs hover:scale-105 hover:shadow-primary/50 transition-all duration-300">
+                  {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
+                </div>
+              </Link>
             </div>
           </header>
         </div>

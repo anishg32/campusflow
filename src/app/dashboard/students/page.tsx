@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Phone, Edit2, Trash2, X, UserPlus, Lock, GraduationCap, ClipboardCheck, CreditCard, Eye } from 'lucide-react';
+import { Search, Phone, Edit2, Trash2, X, UserPlus, Lock, GraduationCap, ClipboardCheck, CreditCard, Eye, BookOpen, ArrowRight } from 'lucide-react';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
@@ -120,7 +120,19 @@ export default function StudentsPage() {
   }, []);
 
   useEffect(() => {
-    if (user?.role === 'student') return;
+    if (user?.role === 'student') {
+      setLoading(true);
+      apiGet<{students: Student[]}>('/students')
+        .then(data => {
+          if (data && data.students && data.students.length > 0) {
+            setStudents(data.students);
+            fetchStudentDashboardData(data.students[0]._id);
+          }
+        })
+        .catch(err => console.error('Failed to fetch my profile:', err))
+        .finally(() => setLoading(false));
+      return;
+    }
     setLoading(true);
     const timer = setTimeout(() => {
       fetchStudents(1, false);
@@ -295,96 +307,24 @@ export default function StudentsPage() {
   };
 
   if (user?.role === 'student') {
-    if (!privacyVerified) {
+    if (loading) {
       return (
-        <div className="space-y-6 max-w-7xl mx-auto flex items-center justify-center min-h-[70vh]">
-          <div className="w-full max-w-md">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">My Student Profile</h1>
-              <p className="text-foreground/60 text-sm mt-1">Verify your identity to view your details</p>
-            </div>
-            <div className="mt-8 bg-card border border-border rounded-xl shadow-lg p-6">
-              <div className="flex justify-center mb-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                  <Lock size={24} />
-                </div>
-              </div>
-              <h2 className="text-xl font-bold text-center mb-2">Privacy Verification</h2>
-              <p className="text-foreground/60 text-sm text-center mb-6">Please enter your details to view your record.</p>
-              
-              {verifyError && (
-                <div className="mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-sm font-medium text-center">
-                  {verifyError}
-                </div>
-              )}
-
-              <form onSubmit={handleVerifyPrivacy} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Register Number</label>
-                  <input
-                    type="text"
-                    required
-                    value={verifyRoll}
-                    onChange={(e) => setVerifyRoll(e.target.value)}
-                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                    placeholder="e.g. CS2024001"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={verifyName}
-                    onChange={(e) => setVerifyName(e.target.value)}
-                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                    placeholder="Exact full name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Department</label>
-                  <select
-                    required
-                    value={verifyDept}
-                    onChange={(e) => setVerifyDept(e.target.value)}
-                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-primary outline-none transition-all"
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map((dept) => (
-                      <option key={dept._id} value={dept._id}>{dept.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5 text-foreground/80">Year of Study</label>
-                  <select
-                    required
-                    value={verifyYear}
-                    onChange={(e) => setVerifyYear(e.target.value)}
-                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-primary outline-none transition-all"
-                  >
-                    <option value="">Select Year</option>
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                  </select>
-                </div>
-                <button
-                  type="submit"
-                  disabled={verifyLoading}
-                  className="w-full py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-70 mt-2"
-                >
-                  {verifyLoading ? 'Verifying...' : 'View My Details'}
-                </button>
-              </form>
-            </div>
-          </div>
+        <div className="text-center py-20 text-foreground/40 text-sm">
+          <div className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full mx-auto mb-3" />
+          Loading your profile...
         </div>
       );
     }
-
+    
     const myProfile = students[0];
+    
+    if (!myProfile) {
+      return (
+        <div className="text-center py-20 text-foreground/40">
+          <p>No student profile found for your account.</p>
+        </div>
+      );
+    }
     
     return (
       <div className="space-y-8 max-w-7xl mx-auto pb-12">
@@ -419,6 +359,30 @@ export default function StudentsPage() {
               <p className="font-medium">{myProfile?.phoneNumber}</p>
             </div>
           </div>
+        </div>
+
+        {/* Quick Links */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <a href="/dashboard/attendance" className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all group">
+            <ClipboardCheck size={20} className="shrink-0" />
+            <span className="font-semibold text-sm">Attendance</span>
+            <ArrowRight size={16} className="ml-auto opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+          </a>
+          <a href="/dashboard/marks" className="flex items-center gap-3 p-4 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20 hover:bg-purple-500/20 transition-all group">
+            <GraduationCap size={20} className="shrink-0" />
+            <span className="font-semibold text-sm">Marks</span>
+            <ArrowRight size={16} className="ml-auto opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+          </a>
+          <a href="/dashboard/materials" className="flex items-center gap-3 p-4 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 hover:bg-blue-500/20 transition-all group">
+            <BookOpen size={20} className="shrink-0" />
+            <span className="font-semibold text-sm">Materials</span>
+            <ArrowRight size={16} className="ml-auto opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+          </a>
+          <a href="/dashboard/fees" className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-all group">
+            <CreditCard size={20} className="shrink-0" />
+            <span className="font-semibold text-sm">Fees</span>
+            <ArrowRight size={16} className="ml-auto opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+          </a>
         </div>
 
         {/* Dashboard Grid */}
@@ -526,14 +490,16 @@ export default function StudentsPage() {
             <h1 className="text-xl lg:text-2xl font-bold tracking-tight">Students</h1>
             <p className="text-foreground/60 text-xs lg:text-sm mt-0.5">Manage all student records</p>
           </div>
-          <button
-            onClick={openAddForm}
-            className="px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 text-sm"
-          >
-            <UserPlus size={16} />
-            <span className="hidden sm:inline">Add Student</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+          {user?.role === 'admin' && (
+            <button
+              onClick={openAddForm}
+              className="px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 text-sm"
+            >
+              <UserPlus size={16} />
+              <span className="hidden sm:inline">Add Student</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          )}
         </div>
         {selectedStudentIds.length > 0 && (
           <div className="flex gap-2 flex-wrap">

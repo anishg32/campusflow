@@ -2,13 +2,14 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiPost, apiGet, type ApiError } from '@/lib/api';
+import { apiPost, type ApiError } from '@/lib/api';
 
 export interface User {
   _id: string;
   name: string;
   email: string;
   role: 'faculty' | 'admin' | 'student';
+  loginId?: string;
   avatar?: string;
   department?: string;
   token: string;
@@ -18,8 +19,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string, expectedRole?: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role: string, phoneNumber?: string) => Promise<void>;
+  login: (credentials: { email?: string; loginId?: string; password: string }, expectedRole?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -49,8 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = useCallback(async (email: string, password: string, expectedRole?: string) => {
-    const data = await apiPost<User>('/auth/login', { email, password });
+  const login = useCallback(async (credentials: { email?: string; loginId?: string; password: string }, expectedRole?: string) => {
+    const data = await apiPost<User>('/auth/login', credentials);
     
     if (expectedRole && data.role !== expectedRole) {
       throw new Error(`Account found, but not registered as ${expectedRole}.`);
@@ -63,12 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/dashboard');
   }, [router]);
 
-  const register = useCallback(async (name: string, email: string, password: string, role: string, phoneNumber?: string) => {
-    await apiPost<User>('/auth/register', { name, email, password, role, phoneNumber });
-    // Don't auto-login — redirect to login page
-    router.push('/login');
-  }, [router]);
-
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -78,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

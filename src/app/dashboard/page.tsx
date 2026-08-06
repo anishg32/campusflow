@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Building2, ClipboardCheck, TrendingUp, ArrowRight, GraduationCap } from 'lucide-react';
+import { Users, Building2, ClipboardCheck, TrendingUp, ArrowRight, GraduationCap, CreditCard, BookOpen } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { apiGet } from '@/lib/api';
 import Link from 'next/link';
